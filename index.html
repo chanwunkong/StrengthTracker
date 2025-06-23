@@ -107,8 +107,15 @@
                     { type: 'line', x0: 12, y0: 0, x1: 12, y1: Math.max(...yData), line: { color: 'red', dash: 'dot' } },
                     { type: 'line', x0: 24, y0: 0, x1: 24, y1: Math.max(...yData), line: { color: 'red', dash: 'dot' } },
                     { type: 'line', x0: 48, y0: 0, x1: 48, y1: Math.max(...yData), line: { color: 'red', dash: 'dot' } }
+                ],
+                annotations: [
+                    { x: 6, y: Math.max(...yData) * 0.95, text: '新手', showarrow: false, font: { color: 'red' } },
+                    { x: 12, y: Math.max(...yData) * 0.95, text: '初學者', showarrow: false, font: { color: 'red' } },
+                    { x: 24, y: Math.max(...yData) * 0.95, text: '中級', showarrow: false, font: { color: 'red' } },
+                    { x: 48, y: Math.max(...yData) * 0.95, text: '高級', showarrow: false, font: { color: 'red' } }
                 ]
             };
+
 
             Plotly.newPlot('chart', [trace], layout);
         }
