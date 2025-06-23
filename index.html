@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>力量訓練成長曲線</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+
+<body>
+    <h2>力量訓練成長曲線</h2>
+    <label for="genderSelect">選擇性別:</label>
+    <select id="genderSelect" onchange="setDefaultWeight(); updateChart()">
+        <option value="male">男性</option>
+        <option value="female">女性</option>
+    </select>
+
+    <br><br>
+
+    <label for="movementSelect">選擇動作:</label>
+    <select id="movementSelect" onchange="updateChart()">
+        <option value="Press">肩推 (Press)</option>
+        <option value="Bench Press">臥推 (Bench Press)</option>
+        <option value="Squat">深蹲 (Squat)</option>
+        <option value="Deadlift">硬舉 (Deadlift)</option>
+        <option value="Power Clean">抓舉 (Power Clean)</option>
+    </select>
+
+    <br><br>
+
+    <label for="weightRange">選擇體重 (kg):</label>
+    <input type="range" id="weightRange" name="weightRange" min="40" max="120" value="70" step="1"
+        oninput="updateChart()">
+    <span id="weightDisplay">70 kg</span>
+
+    <div id="chart" style="width:100%;max-width:900px;height:600px;"></div>
+
+    <script>
+        // 所有動作的參數
+        const movementParams = {
+            "male": {
+                "Press": { a: 0.113, s: -0.01578, t_b: 2.668, p: -422.54, q: 3.62e-6, r: 0.5526 },
+                "Bench Press": { a: 0.935, s: -0.00272, t_b: 0.5300, p: 0.3405, q: -0.00562, r: 1.6184 },
+                "Squat": { a: 1.059, s: -0.00634, t_b: 1.1043, p: 62.907, q: -0.0000476, r: 1.6015 },
+                "Deadlift": { a: 0.988, s: -0.00928, t_b: 1.5846, p: -0.7409, q: 227.569, r: 8.8764 },
+                "Power Clean": { a: 0.407, s: -0.00948, t_b: 1.6956, p: 0.2296, q: -0.00551, r: 1.1116 }
+            },
+            "female": {
+                "Press": { a: 0.085, s: -0.012, t_b: 2.0, p: -300.0, q: 3.0e-6, r: 0.45 },
+                "Bench Press": { a: 0.75, s: -0.002, t_b: 0.4, p: 0.28, q: -0.004, r: 1.4 },
+                "Squat": { a: 0.85, s: -0.005, t_b: 0.9, p: 50.0, q: -0.00004, r: 1.3 },
+                "Deadlift": { a: 0.80, s: -0.007, t_b: 1.2, p: -0.6, q: 200.0, r: 7.5 },
+                "Power Clean": { a: 0.33, s: -0.007, t_b: 1.5, p: 0.18, q: -0.004, r: 1.0 }
+            }
+        };
+
+        function calculateAbsoluteStrength(t, w, params) {
+            const ratio = params.a * Math.log((params.s * w + params.t_b) * t + 1) + (params.p * Math.log(params.q * w + 1) + params.r);
+            return ratio * w;
+        }
+
+        function setDefaultWeight() {
+            const gender = document.getElementById('genderSelect').value;
+            const weightRange = document.getElementById('weightRange');
+            const weightDisplay = document.getElementById('weightDisplay');
+
+            if (gender === 'male') {
+                weightRange.value = 70;
+                weightDisplay.innerText = '70 kg';
+            } else {
+                weightRange.value = 55;
+                weightDisplay.innerText = '55 kg';
+            }
+        }
+
+        function updateChart() {
+            const gender = document.getElementById('genderSelect').value;
+            const movement = document.getElementById('movementSelect').value;
+            const params = movementParams[gender][movement];
+
+            const weight = parseInt(document.getElementById('weightRange').value);
+            document.getElementById('weightDisplay').innerText = weight + ' kg';
+
+            let xData = [];
+            let yData = [];
+
+            for (let t = 0; t <= 120; t++) { // 0~10年 (120個月)
+                xData.push(t);
+                yData.push(calculateAbsoluteStrength(t, weight, params));
+            }
+
+            const trace = {
+                x: xData,
+                y: yData,
+                type: 'scatter',
+                mode: 'lines+markers',
+                name: movement + ' 絕對力量 (kg)'
+            };
+
+            const layout = {
+                title: '體重 ' + weight + ' kg 的 ' + getMovementName(movement) + ' 力量訓練成長曲線 (' + (gender === 'male' ? '男性' : '女性') + ')',
+                xaxis: { title: '訓練時間（月）' },
+                yaxis: { title: '最大力量 (kg)' },
+                shapes: [
+                    { type: 'line', x0: 6, y0: 0, x1: 6, y1: Math.max(...yData), line: { color: 'red', dash: 'dot' } },
+                    { type: 'line', x0: 12, y0: 0, x1: 12, y1: Math.max(...yData), line: { color: 'red', dash: 'dot' } },
+                    { type: 'line', x0: 24, y0: 0, x1: 24, y1: Math.max(...yData), line: { color: 'red', dash: 'dot' } },
+                    { type: 'line', x0: 48, y0: 0, x1: 48, y1: Math.max(...yData), line: { color: 'red', dash: 'dot' } }
+                ]
+            };
+
+            Plotly.newPlot('chart', [trace], layout);
+        }
+
+        function getMovementName(movement) {
+            const names = {
+                'Press': '肩推 (Press)',
+                'Bench Press': '臥推 (Bench Press)',
+                'Squat': '深蹲 (Squat)',
+                'Deadlift': '硬舉 (Deadlift)',
+                'Power Clean': '抓舉 (Power Clean)'
+            };
+            return names[movement];
+        }
+
+        // 初始化圖表
+        setDefaultWeight();
+        updateChart();
+    </script>
+
+</body>
+
+</html>
