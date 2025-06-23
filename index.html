@@ -4,12 +4,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>力量曲線互動圖</title>
+    <title>力量成長曲線</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 
 <body>
-    <h2>力量成長曲線 (按體重調整)</h2>
+    <h2 id="title">力量成長曲線</h2>
+
+    <label for="languageSelect">Language / 語言:</label>
+    <select id="languageSelect" onchange="updateChart()">
+        <option value="zh">中文</option>
+        <option value="en">English</option>
+    </select>
+
+    <br><br>
+
+    <label for="unitSelect">單位 / Unit:</label>
+    <select id="unitSelect" onchange="updateChart()">
+        <option value="kg">公斤 (kg)</option>
+        <option value="lb">磅 (lb)</option>
+    </select>
+
+    <br><br>
+
     <label for="genderSelect">選擇性別:</label>
     <select id="genderSelect" onchange="setDefaultWeight(); updateChart()">
         <option value="male">男性</option>
@@ -29,37 +46,50 @@
 
     <br><br>
 
-    <label for="weightRange">選擇體重 (kg):</label>
-    <input type="range" id="weightRange" name="weightRange" min="40" max="120" value="70" step="1"
-        oninput="updateChart()">
+    <label for="weightRange">選擇體重:</label>
+    <input type="range" id="weightRange" min="40" max="120" value="70" step="1" oninput="updateChart()">
     <span id="weightDisplay">70 kg</span>
+
+    <br><br>
+
+    <label for="xMaxRange">X 軸最大值 (月):</label>
+    <input type="range" id="xMaxRange" min="12" max="120" value="60" step="1" oninput="updateChart()">
+    <span id="xMaxDisplay">60 月</span>
+
+    <br><br>
+
+    <label for="yMaxRange">Y 軸最大值:</label>
+    <input type="range" id="yMaxRange" min="50" max="500" value="200" step="10" oninput="updateChart()">
+    <span id="yMaxDisplay">200 kg</span>
+
+    <br><br>
 
     <div id="chart" style="width:100%;max-width:900px;height:600px;"></div>
 
     <script>
-        // 所有動作的參數
+        let language = 'zh';
+        let unit = 'kg';
+
         const movementParams = {
             "male": {
-                "Press": { a: 0.1431, s: -0.00638, t_b: 1.1754, p: -10.0000, q: 0.00014, r: 0.5232 },
-                "Bench Press": { a: 0.3139, s: -0.00264, t_b: 0.4839, p: -0.5423, q: 0.00819, r: 0.8852 },
-                "Squat": { a: 0.5422, s: -0.00464, t_b: 0.8392, p: 0.0940, q: 1.0000, r: 0.2077 },
-                "Deadlift": { a: 0.6162, s: -0.00451, t_b: 0.7939, p: -10.0000, q: 0.00021, r: 0.9278 },
-                "Power Clean": { a: 0.2729, s: -0.00695, t_b: 1.2416, p: -0.8312, q: 0.00270, r: 0.6080 }
+                "Press": { a: 0.143081, s: -0.006382, t_b: 1.175420, p: -10.000000, q: 0.000139, r: 0.523168 },
+                "Bench Press": { a: 0.313917, s: -0.002640, t_b: 0.483858, p: -0.542333, q: 0.008190, r: 0.885181 },
+                "Squat": { a: 0.542238, s: -0.004639, t_b: 0.839241, p: 0.094006, q: 1.000000, r: 0.207660 },
+                "Deadlift": { a: 0.616152, s: -0.004511, t_b: 0.793862, p: -10.000000, q: 0.000214, r: 0.927825 },
+                "Power Clean": { a: 0.272927, s: -0.006954, t_b: 1.241554, p: -0.831159, q: 0.002697, r: 0.608000 }
             },
             "female": {
-                "Press": { a: 0.1814, s: 0, t_b: 0.1890, p: -9.9254, q: 0.0000313, r: 0.3351 },
-                "Bench Press": { a: 0.1969, s: -0.00190, t_b: 0.3630, p: -0.9643, q: 0.00197, r: 0.5763 },
-                "Squat": { a: 0.2910, s: -0.00321, t_b: 0.7077, p: -10.0000, q: 0.0000872, r: 0.5138 },
-                "Deadlift": { a: 0.4580, s: -0.00380, t_b: 0.5739, p: -9.9499, q: 0.0001506, r: 0.6309 },
-                "Power Clean": { a: 0.1987, s: -0.00584, t_b: 0.9348, p: -10.0000, q: 0.0000529, r: 0.3616 }
+                "Press": { a: 1.060079656, s: -0.00000479555, t_b: 0.016407532, p: -9.999999936, q: 0.0000283981, r: 0.344401136 },
+                "Bench Press": { a: 1.156197656, s: -0.0000694985, t_b: 0.022878292, p: -9.999999992, q: 0.000181857, r: 0.591675884 },
+                "Squat": { a: 0.518626596, s: -0.000598282, t_b: 0.193108691, p: -9.999999999, q: 0.000101625, r: 0.53494326 },
+                "Deadlift": { a: 1.107697795, s: -0.000438779, t_b: 0.096978515, p: -9.999999985, q: 0.000191939, r: 0.685331933 },
+                "Power Clean": { a: 0.372718555, s: -0.000882204, t_b: 0.208095481, p: -9.999999796, q: 0.000073921, r: 0.384703321 }
             }
         };
 
-
-
         function calculateAbsoluteStrength(t, w, params) {
             const ratio = params.a * Math.log((params.s * w + params.t_b) * t + 1) + (params.p * Math.log(params.q * w + 1) + params.r);
-            return ratio * w; // 直接計算絕對重量
+            return ratio * w;
         }
 
         function setDefaultWeight() {
@@ -77,19 +107,37 @@
         }
 
         function updateChart() {
+            language = document.getElementById('languageSelect').value;
+            unit = document.getElementById('unitSelect').value;
+
             const gender = document.getElementById('genderSelect').value;
             const movement = document.getElementById('movementSelect').value;
             const params = movementParams[gender][movement];
 
-            const weight = parseInt(document.getElementById('weightRange').value);
-            document.getElementById('weightDisplay').innerText = weight + ' kg';
+            const weightSlider = document.getElementById('weightRange');
+            let weight = parseInt(weightSlider.value);
+            let weightDisplay = document.getElementById('weightDisplay');
+
+            let xMax = parseInt(document.getElementById('xMaxRange').value);
+            let yMax = parseInt(document.getElementById('yMaxRange').value);
+
+            if (unit === 'lb') {
+                weightDisplay.innerText = (weight * 2.20462).toFixed(0) + ' lb';
+            } else {
+                weightDisplay.innerText = weight + ' kg';
+            }
+
+            document.getElementById('xMaxDisplay').innerText = xMax + (language === 'zh' ? ' 月' : ' months');
+            document.getElementById('yMaxDisplay').innerText = yMax + ' ' + unit;
 
             let xData = [];
             let yData = [];
 
-            for (let t = 0; t <= 120; t++) { // 0~10年 (120個月)
+            for (let t = 0; t <= xMax; t++) {
+                let strength = calculateAbsoluteStrength(t, weight, params);
+                if (unit === 'lb') strength *= 2.20462;
                 xData.push(t);
-                yData.push(calculateAbsoluteStrength(t, weight, params));
+                yData.push(strength);
             }
 
             const trace = {
@@ -97,42 +145,50 @@
                 y: yData,
                 type: 'scatter',
                 mode: 'lines+markers',
-                name: movement + ' 絕對力量 (kg)'
+                name: getMovementName(movement)
             };
 
             const layout = {
-                title: '體重 ' + weight + ' kg 的 ' + getMovementName(movement) + ' 絕對力量成長曲線 (' + (gender === 'male' ? '男性' : '女性') + ')',
-                xaxis: { title: '訓練時間（月）' },
-                yaxis: { title: '絕對力量 (kg)' },
+                title: getChartTitle(weight, movement, gender),
+                xaxis: { title: language === 'zh' ? '訓練時間（月）' : 'Training Time (Months)', range: [0, xMax] },
+                yaxis: { title: language === 'zh' ? '絕對力量 (' + unit + ')' : 'Absolute Strength (' + unit + ')', range: [0, yMax] },
                 shapes: [
-                    { type: 'line', x0: 6, y0: 0, x1: 6, y1: Math.max(...yData), line: { color: 'red', dash: 'dot' } },
-                    { type: 'line', x0: 12, y0: 0, x1: 12, y1: Math.max(...yData), line: { color: 'red', dash: 'dot' } },
-                    { type: 'line', x0: 24, y0: 0, x1: 24, y1: Math.max(...yData), line: { color: 'red', dash: 'dot' } },
-                    { type: 'line', x0: 48, y0: 0, x1: 48, y1: Math.max(...yData), line: { color: 'red', dash: 'dot' } }
+                    { type: 'line', x0: 6, y0: 0, x1: 6, y1: yMax, line: { color: 'red', dash: 'dot' } },
+                    { type: 'line', x0: 12, y0: 0, x1: 12, y1: yMax, line: { color: 'red', dash: 'dot' } },
+                    { type: 'line', x0: 24, y0: 0, x1: 24, y1: yMax, line: { color: 'red', dash: 'dot' } },
+                    { type: 'line', x0: 48, y0: 0, x1: 48, y1: yMax, line: { color: 'red', dash: 'dot' } }
                 ],
                 annotations: [
-                    { x: 6, y: 0, text: '新手', showarrow: false, font: { color: 'red' }, yshift: -20 },
-                    { x: 12, y: 0, text: '初學者', showarrow: false, font: { color: 'red' }, yshift: -20 },
-                    { x: 24, y: 0, text: '中級', showarrow: false, font: { color: 'red' }, yshift: -20 },
-                    { x: 48, y: 0, text: '高級', showarrow: false, font: { color: 'red' }, yshift: -20 }
+                    { x: 6, y: 0, text: language === 'zh' ? '新手' : 'Beginner', showarrow: false, font: { color: 'red' }, yshift: -20 },
+                    { x: 12, y: 0, text: language === 'zh' ? '中級' : 'Novice', showarrow: false, font: { color: 'red' }, yshift: -20 },
+                    { x: 24, y: 0, text: language === 'zh' ? '高級' : 'Intermediate', showarrow: false, font: { color: 'red' }, yshift: -20 },
+                    { x: 48, y: 0, text: language === 'zh' ? '精英' : 'Elite', showarrow: false, font: { color: 'red' }, yshift: -20 }
                 ]
             };
 
             Plotly.newPlot('chart', [trace], layout);
         }
 
+        function getChartTitle(weight, movement, gender) {
+            let genderText = (language === 'zh') ? (gender === 'male' ? '男性' : '女性') : (gender === 'male' ? 'Male' : 'Female');
+            let movementName = getMovementName(movement);
+            let weightDisplay = unit === 'lb' ? (weight * 2.20462).toFixed(0) + ' lb' : weight + ' kg';
+            return language === 'zh' ?
+                '體重 ' + weightDisplay + ' 的 ' + movementName + ' 力量成長曲線 (' + genderText + ')' :
+                movementName + ' Strength Progression (' + genderText + ', ' + weightDisplay + ')';
+        }
+
         function getMovementName(movement) {
             const names = {
-                'Press': '肩推 (Press)',
-                'Bench Press': '臥推 (Bench Press)',
-                'Squat': '深蹲 (Squat)',
-                'Deadlift': '硬舉 (Deadlift)',
-                'Power Clean': '抓舉 (Power Clean)'
+                'Press': language === 'zh' ? '肩推 (Press)' : 'Press',
+                'Bench Press': language === 'zh' ? '臥推 (Bench Press)' : 'Bench Press',
+                'Squat': language === 'zh' ? '深蹲 (Squat)' : 'Squat',
+                'Deadlift': language === 'zh' ? '硬舉 (Deadlift)' : 'Deadlift',
+                'Power Clean': language === 'zh' ? '抓舉 (Power Clean)' : 'Power Clean'
             };
             return names[movement];
         }
 
-        // 初始化圖表
         setDefaultWeight();
         updateChart();
     </script>
