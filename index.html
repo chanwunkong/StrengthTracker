@@ -4,12 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>力量訓練成長曲線</title>
+    <title>力量曲線互動圖</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 
 <body>
-    <h2>力量訓練成長曲線</h2>
+    <h2>力量成長曲線 (按體重調整)</h2>
     <label for="genderSelect">選擇性別:</label>
     <select id="genderSelect" onchange="setDefaultWeight(); updateChart()">
         <option value="male">男性</option>
@@ -40,24 +40,26 @@
         // 所有動作的參數
         const movementParams = {
             "male": {
-                "Press": { a: 0.113, s: -0.01578, t_b: 2.668, p: -422.54, q: 3.62e-6, r: 0.5526 },
-                "Bench Press": { a: 0.935, s: -0.00272, t_b: 0.5300, p: 0.3405, q: -0.00562, r: 1.6184 },
-                "Squat": { a: 1.059, s: -0.00634, t_b: 1.1043, p: 62.907, q: -0.0000476, r: 1.6015 },
-                "Deadlift": { a: 0.988, s: -0.00928, t_b: 1.5846, p: -0.7409, q: 227.569, r: 8.8764 },
-                "Power Clean": { a: 0.407, s: -0.00948, t_b: 1.6956, p: 0.2296, q: -0.00551, r: 1.1116 }
+                "Press": { a: 0.1431, s: -0.00638, t_b: 1.1754, p: -10.0000, q: 0.00014, r: 0.5232 },
+                "Bench Press": { a: 0.3139, s: -0.00264, t_b: 0.4839, p: -0.5423, q: 0.00819, r: 0.8852 },
+                "Squat": { a: 0.5422, s: -0.00464, t_b: 0.8392, p: 0.0940, q: 1.0000, r: 0.2077 },
+                "Deadlift": { a: 0.6162, s: -0.00451, t_b: 0.7939, p: -10.0000, q: 0.00021, r: 0.9278 },
+                "Power Clean": { a: 0.2729, s: -0.00695, t_b: 1.2416, p: -0.8312, q: 0.00270, r: 0.6080 }
             },
             "female": {
-                "Press": { a: 0.085, s: -0.012, t_b: 2.0, p: -300.0, q: 3.0e-6, r: 0.45 },
-                "Bench Press": { a: 0.75, s: -0.002, t_b: 0.4, p: 0.28, q: -0.004, r: 1.4 },
-                "Squat": { a: 0.85, s: -0.005, t_b: 0.9, p: 50.0, q: -0.00004, r: 1.3 },
-                "Deadlift": { a: 0.80, s: -0.007, t_b: 1.2, p: -0.6, q: 200.0, r: 7.5 },
-                "Power Clean": { a: 0.33, s: -0.007, t_b: 1.5, p: 0.18, q: -0.004, r: 1.0 }
+                "Press": { a: 0.1814, s: 0, t_b: 0.1890, p: -9.9254, q: 0.0000313, r: 0.3351 },
+                "Bench Press": { a: 0.1969, s: -0.00190, t_b: 0.3630, p: -0.9643, q: 0.00197, r: 0.5763 },
+                "Squat": { a: 0.2910, s: -0.00321, t_b: 0.7077, p: -10.0000, q: 0.0000872, r: 0.5138 },
+                "Deadlift": { a: 0.4580, s: -0.00380, t_b: 0.5739, p: -9.9499, q: 0.0001506, r: 0.6309 },
+                "Power Clean": { a: 0.1987, s: -0.00584, t_b: 0.9348, p: -10.0000, q: 0.0000529, r: 0.3616 }
             }
         };
 
+
+
         function calculateAbsoluteStrength(t, w, params) {
             const ratio = params.a * Math.log((params.s * w + params.t_b) * t + 1) + (params.p * Math.log(params.q * w + 1) + params.r);
-            return ratio * w;
+            return ratio * w; // 直接計算絕對重量
         }
 
         function setDefaultWeight() {
@@ -99,9 +101,9 @@
             };
 
             const layout = {
-                title: '體重 ' + weight + ' kg 的 ' + getMovementName(movement) + ' 力量訓練成長曲線 (' + (gender === 'male' ? '男性' : '女性') + ')',
+                title: '體重 ' + weight + ' kg 的 ' + getMovementName(movement) + ' 絕對力量成長曲線 (' + (gender === 'male' ? '男性' : '女性') + ')',
                 xaxis: { title: '訓練時間（月）' },
-                yaxis: { title: '最大力量 (kg)' },
+                yaxis: { title: '絕對力量 (kg)' },
                 shapes: [
                     { type: 'line', x0: 6, y0: 0, x1: 6, y1: Math.max(...yData), line: { color: 'red', dash: 'dot' } },
                     { type: 'line', x0: 12, y0: 0, x1: 12, y1: Math.max(...yData), line: { color: 'red', dash: 'dot' } },
@@ -109,13 +111,12 @@
                     { type: 'line', x0: 48, y0: 0, x1: 48, y1: Math.max(...yData), line: { color: 'red', dash: 'dot' } }
                 ],
                 annotations: [
-                    { x: 6, y: Math.max(...yData) * 0.95, text: '新手', showarrow: false, font: { color: 'red' } },
-                    { x: 12, y: Math.max(...yData) * 0.95, text: '初學者', showarrow: false, font: { color: 'red' } },
-                    { x: 24, y: Math.max(...yData) * 0.95, text: '中級', showarrow: false, font: { color: 'red' } },
-                    { x: 48, y: Math.max(...yData) * 0.95, text: '高級', showarrow: false, font: { color: 'red' } }
+                    { x: 6, y: 0, text: '新手', showarrow: false, font: { color: 'red' }, yshift: -20 },
+                    { x: 12, y: 0, text: '初學者', showarrow: false, font: { color: 'red' }, yshift: -20 },
+                    { x: 24, y: 0, text: '中級', showarrow: false, font: { color: 'red' }, yshift: -20 },
+                    { x: 48, y: 0, text: '高級', showarrow: false, font: { color: 'red' }, yshift: -20 }
                 ]
             };
-
 
             Plotly.newPlot('chart', [trace], layout);
         }
