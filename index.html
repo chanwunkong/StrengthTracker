@@ -57,15 +57,17 @@
         .radio-group {
             display: flex;
             align-items: center;
-            gap: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
         }
+
 
         .radio-option {
             display: flex;
             align-items: center;
             gap: 5px;
-
             white-space: nowrap;
+            padding: 2px 5px;
         }
 
         .radio-option input[type="radio"] {
@@ -94,6 +96,19 @@
             text-align: right;
         }
 
+        .slider-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .slider-control button {
+            width: 30px;
+            height: 30px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
         .chart-container {
             margin-top: 30px;
         }
@@ -108,7 +123,6 @@
             margin-bottom: 30px;
         }
     </style>
-
 </head>
 
 <body>
@@ -118,7 +132,7 @@
     <header>
         <div>
             <label for="languageSelect">Language / 語言:</label>
-            <select id="languageSelect" onchange="updateChart()">
+            <select id="languageSelect" onchange="updateLanguage(); updateChart()">
                 <option value="zh">中文</option>
                 <option value="en">English</option>
             </select>
@@ -153,31 +167,45 @@
                 </div>
             </div>
 
-
-            <label for="movementSelect">選擇動作:</label>
-            <select id="movementSelect" onchange="updateChart()">
-                <option value="Press">肩推 (Press)</option>
-                <option value="Bench Press">臥推 (Bench Press)</option>
-                <option value="Squat">深蹲 (Squat)</option>
-                <option value="Deadlift">硬舉 (Deadlift)</option>
-                <option value="Power Clean">抓舉 (Power Clean)</option>
-            </select>
-
             <div class="slider-group">
-                <div class="slider-label">
-                    <label for="weightRange">選擇體重:</label>
-                    <span id="weightDisplay">70 kg</span>
+                <label>選擇動作:</label>
+                <div class="radio-group" id="movementRadioGroup">
+                    <div class="radio-option">
+                        <input type="radio" id="press" name="movement" value="Press" checked onchange="updateChart()">
+                        <label for="press">肩推 (Press)</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="benchPress" name="movement" value="Bench Press"
+                            onchange="updateChart()">
+                        <label for="benchPress">臥推 (Bench Press)</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="squat" name="movement" value="Squat" onchange="updateChart()">
+                        <label for="squat">深蹲 (Squat)</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="deadlift" name="movement" value="Deadlift" onchange="updateChart()">
+                        <label for="deadlift">硬舉 (Deadlift)</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="powerClean" name="movement" value="Power Clean"
+                            onchange="updateChart()">
+                        <label for="powerClean">抓舉 (Power Clean)</label>
+                    </div>
                 </div>
-                <input type="range" id="weightRange" min="40" max="120" value="70" step="1"
-                    oninput="syncWeightInput(this.value)">
             </div>
+
 
             <div class="slider-group">
                 <div class="slider-label">
                     <label for="xMaxRange">X 軸最大值 (月):</label>
                     <span id="xMaxDisplay">60 月</span>
                 </div>
-                <input type="range" id="xMaxRange" min="12" max="120" value="60" step="1" oninput="updateChart()">
+                <div class="slider-control">
+                    <button onclick="adjustSlider('xMaxRange', -1)">-</button>
+                    <input type="range" id="xMaxRange" min="12" max="120" value="60" step="1" oninput="updateChart()">
+                    <button onclick="adjustSlider('xMaxRange', 1)">+</button>
+                </div>
             </div>
 
             <div class="slider-group">
@@ -185,7 +213,11 @@
                     <label for="yMaxRange">Y 軸最大值:</label>
                     <span id="yMaxDisplay">200 kg</span>
                 </div>
-                <input type="range" id="yMaxRange" min="50" max="500" value="200" step="10" oninput="updateChart()">
+                <div class="slider-control">
+                    <button onclick="adjustSlider('yMaxRange', -10)">-</button>
+                    <input type="range" id="yMaxRange" min="50" max="500" value="200" step="10" oninput="updateChart()">
+                    <button onclick="adjustSlider('yMaxRange', 10)">+</button>
+                </div>
             </div>
         </div>
 
@@ -198,8 +230,12 @@
                     <label for="userWeight">您的體重:</label>
                     <span><span id="userWeightValue">70</span> <span id="userWeightUnit">kg</span></span>
                 </div>
-                <input type="range" id="userWeight" min="40" max="120" value="70" step="1"
-                    oninput="updateUserWeight(this.value)">
+                <div class="slider-control">
+                    <button onclick="adjustSlider('userWeight', -1)">-</button>
+                    <input type="range" id="userWeight" min="40" max="120" value="70" step="1"
+                        oninput="updateUserWeight(this.value)">
+                    <button onclick="adjustSlider('userWeight', 1)">+</button>
+                </div>
             </div>
 
             <div class="slider-group">
@@ -207,7 +243,12 @@
                     <label for="userRM">您的 RM (次數):</label>
                     <span id="userRMValue">5</span>
                 </div>
-                <input type="range" id="userRM" min="1" max="15" value="5" step="1" oninput="updateUserRM(this.value)">
+                <div class="slider-control">
+                    <button onclick="adjustSlider('userRM', -1)">-</button>
+                    <input type="range" id="userRM" min="1" max="15" value="5" step="1"
+                        oninput="updateUserRM(this.value)">
+                    <button onclick="adjustSlider('userRM', 1)">+</button>
+                </div>
             </div>
 
             <div class="slider-group">
@@ -215,8 +256,12 @@
                     <label for="userStrength">您該 RM 的重量:</label>
                     <span><span id="userStrengthValue">0</span> <span id="userStrengthUnit">kg</span></span>
                 </div>
-                <input type="range" id="userStrength" min="0" max="300" value="0" step="1"
-                    oninput="updateUserStrength(this.value)">
+                <div class="slider-control">
+                    <button onclick="adjustSlider('userStrength', -1)">-</button>
+                    <input type="range" id="userStrength" min="0" max="300" value="0" step="1"
+                        oninput="updateUserStrength(this.value)">
+                    <button onclick="adjustSlider('userStrength', 1)">+</button>
+                </div>
             </div>
 
             <h4 id="oneRMDisplay">預估 1RM：<span id="oneRMValue">0</span> <span id="oneRMUnit">kg</span></h4>
@@ -231,12 +276,30 @@
         </div>
     </main>
 
-
-
     <script>
+        function adjustSlider(sliderId, step) {
+            const slider = document.getElementById(sliderId);
+            let newValue = parseInt(slider.value) + step;
+
+            if (newValue >= parseInt(slider.min) && newValue <= parseInt(slider.max)) {
+                slider.value = newValue;
+
+                if (sliderId === 'xMaxRange' || sliderId === 'yMaxRange') {
+                    document.getElementById(sliderId).dispatchEvent(new Event('input'));
+                } else if (sliderId === 'userWeight') {
+                    updateUserWeight(newValue);
+                } else if (sliderId === 'userRM') {
+                    updateUserRM(newValue);
+                } else if (sliderId === 'userStrength') {
+                    updateUserStrength(newValue);
+                }
+            }
+        }
+
+
+
         let language = 'zh';
         let unit = 'kg';
-
 
         const movementParams = {
             "male": {
@@ -266,30 +329,21 @@
 
         function setDefaultWeight() {
             const gender = document.querySelector('input[name="gender"]:checked').value;
-            const weightRange = document.getElementById('weightRange');
             const userWeight = document.getElementById('userWeight');
 
             if (gender === 'male') {
-                weightRange.value = 70;
                 userWeight.value = 70;
                 document.getElementById('userWeightValue').innerText = 70;
             } else {
-                weightRange.value = 55;
                 userWeight.value = 55;
                 document.getElementById('userWeightValue').innerText = 55;
             }
             updateChart();
         }
 
-        function syncWeightInput(value) {
-            document.getElementById('userWeight').value = parseInt(value);
-            document.getElementById('userWeightValue').innerText = parseInt(value);
-            updateChart();
-        }
-
         function updateUserWeight(value) {
             document.getElementById('userWeightValue').innerText = value;
-            document.getElementById('weightRange').value = value;
+            document.getElementById('userWeightValue').innerText = value;
             updateChart();
         }
 
@@ -308,25 +362,23 @@
             unit = document.getElementById('unitSelect').value;
 
             const gender = document.querySelector('input[name="gender"]:checked').value;
-            const movement = document.getElementById('movementSelect').value;
+            const movement = document.querySelector('input[name="movement"]:checked').value;
             const params = movementParams[gender][movement];
 
-            let weight = parseInt(document.getElementById('weightRange').value);
-            let userWeight = parseInt(document.getElementById('userWeight').value);
-            let weightDisplay = document.getElementById('weightDisplay');
+            let weight = parseInt(document.getElementById('userWeight').value);
+
 
             let xMax = parseInt(document.getElementById('xMaxRange').value);
             let yMax = parseInt(document.getElementById('yMaxRange').value);
 
+            let userWeight = parseInt(document.getElementById('userWeight').value);
             let userRM = parseInt(document.getElementById('userRM').value);
             let userStrengthInput = parseFloat(document.getElementById('userStrength').value);
 
             if (unit === 'lb') {
-                weightDisplay.innerText = Math.round(weight * 2.20462) + ' lb';
                 document.getElementById('userWeightUnit').innerText = 'lb';
                 document.getElementById('userStrengthUnit').innerText = 'lb';
             } else {
-                weightDisplay.innerText = weight + ' kg';
                 document.getElementById('userWeightUnit').innerText = 'kg';
                 document.getElementById('userStrengthUnit').innerText = 'kg';
             }
@@ -441,6 +493,11 @@
                 male: '男性',
                 female: '女性',
                 movement: '選擇動作:',
+                press: '肩推 (Press)',
+                benchPress: '臥推 (Bench Press)',
+                squat: '深蹲 (Squat)',
+                deadlift: '硬舉 (Deadlift)',
+                powerClean: '抓舉 (Power Clean)',
                 bodyWeight: '選擇體重:',
                 xAxis: 'X 軸最大值 (月):',
                 yAxis: 'Y 軸最大值:',
@@ -459,6 +516,11 @@
                 male: 'Male',
                 female: 'Female',
                 movement: 'Select Movement:',
+                press: 'Press',
+                benchPress: 'Bench Press',
+                squat: 'Squat',
+                deadlift: 'Deadlift',
+                powerClean: 'Power Clean',
                 bodyWeight: 'Body Weight:',
                 xAxis: 'X Axis Max (Months):',
                 yAxis: 'Y Axis Max:',
@@ -475,12 +537,18 @@
         };
 
         function updateLanguage() {
+            language = document.getElementById('languageSelect').value; // 加這一行
+
             document.getElementById('title').innerText = labels[language].chartTitle;
             document.querySelector('label[for="male"]').innerText = labels[language].male;
             document.querySelector('label[for="female"]').innerText = labels[language].female;
             document.querySelector('.radio-group').previousElementSibling.innerText = labels[language].gender;
             document.querySelector('label[for="movementSelect"]').innerText = labels[language].movement;
-            document.querySelector('label[for="weightRange"]').innerText = labels[language].bodyWeight;
+            document.querySelector('label[for="press"]').innerText = labels[language]['press'];
+            document.querySelector('label[for="benchPress"]').innerText = labels[language]['benchPress'];
+            document.querySelector('label[for="squat"]').innerText = labels[language]['squat'];
+            document.querySelector('label[for="deadlift"]').innerText = labels[language]['deadlift'];
+            document.querySelector('label[for="powerClean"]').innerText = labels[language]['powerClean'];
             document.querySelector('label[for="xMaxRange"]').innerText = labels[language].xAxis;
             document.querySelector('label[for="yMaxRange"]').innerText = labels[language].yAxis;
             document.querySelector('label[for="userWeight"]').innerText = labels[language].userBodyWeight;
@@ -489,9 +557,7 @@
             document.getElementById('oneRMDisplay').childNodes[0].nodeValue = labels[language].estimated1RM + ' ';
         }
 
-
     </script>
-
 
 </body>
 
