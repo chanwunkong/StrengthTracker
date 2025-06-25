@@ -292,18 +292,18 @@
                 <h4 id="oneRMDisplay">預估 1RM：<span id="oneRMValue">0</span> <span id="oneRMUnit">kg</span></h4>
             </div>
 
-            <!-- Casey Butt 最大肌肉潛力計算器 -->
+            <!-- 依體脂率推估的最大肌肉潛力與總體重計算器 -->
             <div class="section">
-                <h3>Casey Butt 最大肌肉潛力計算器</h3>
+                <h3>依體脂率推估的最大肌肉潛力與總體重計算器</h3>
 
                 <div class="slider-group">
                     <div class="slider-label">
                         <label for="heightInput">身高 (cm):</label>
-                        <span id="heightDisplay">170 cm</span>
+                        <span id="heightDisplay">175 cm</span>
                     </div>
                     <div class="slider-control">
                         <button onclick="adjustSlider('heightInput', -1)">-</button>
-                        <input type="range" id="heightInput" min="140" max="220" value="170" step="1"
+                        <input type="range" id="heightInput" min="140" max="220" value="175" step="1"
                             oninput="updateHeight(this.value)">
                         <button onclick="adjustSlider('heightInput', 1)">+</button>
                     </div>
@@ -312,11 +312,11 @@
                 <div class="slider-group">
                     <div class="slider-label">
                         <label for="wristInput">手腕圍 (cm):</label>
-                        <span id="wristDisplay">16 cm</span>
+                        <span id="wristDisplay">16.5 cm</span>
                     </div>
                     <div class="slider-control">
                         <button onclick="adjustSlider('wristInput', -0.1)">-</button>
-                        <input type="range" id="wristInput" min="12" max="24" value="16" step="0.1"
+                        <input type="range" id="wristInput" min="12" max="24" value="16.5" step="0.1"
                             oninput="updateWrist(this.value)">
                         <button onclick="adjustSlider('wristInput', 0.1)">+</button>
                     </div>
@@ -325,11 +325,11 @@
                 <div class="slider-group">
                     <div class="slider-label">
                         <label for="ankleInput">腳踝圍 (cm):</label>
-                        <span id="ankleDisplay">21 cm</span>
+                        <span id="ankleDisplay">22 cm</span>
                     </div>
                     <div class="slider-control">
                         <button onclick="adjustSlider('ankleInput', -0.1)">-</button>
-                        <input type="range" id="ankleInput" min="15" max="30" value="21" step="0.1"
+                        <input type="range" id="ankleInput" min="15" max="30" value="22" step="0.1"
                             oninput="updateAnkle(this.value)">
                         <button onclick="adjustSlider('ankleInput', 0.1)">+</button>
                     </div>
@@ -340,11 +340,11 @@
                 <div class="slider-group">
                     <div class="slider-label">
                         <label for="targetBodyFatInput">目標體脂率 (%):</label>
-                        <span id="targetBodyFatDisplay">20 %</span>
+                        <span id="targetBodyFatDisplay">15 %</span>
                     </div>
                     <div class="slider-control">
                         <button onclick="adjustSlider('targetBodyFatInput', -1)">-</button>
-                        <input type="range" id="targetBodyFatInput" min="5" max="30" value="10" step="1"
+                        <input type="range" id="targetBodyFatInput" min="5" max="30" value="15" step="1"
                             oninput="updateTargetBodyFat(this.value)">
                         <button onclick="adjustSlider('targetBodyFatInput', 1)">+</button>
                     </div>
@@ -354,11 +354,6 @@
                 <h4>理論最大體重：<span id="maxBodyWeight">0</span> kg</h4>
                 <h4>95% 現實可達無脂體重：<span id="realisticLeanMass">0</span> kg</h4>
                 <h4>95% 現實可達體重：<span id="realisticBodyWeight">0</span> kg</h4>
-
-                <!-- <div class="chart-container">
-                    <div id="stackedBarChart"></div>
-                </div> -->
-
 
             </div>
 
@@ -375,6 +370,12 @@
     </main>
 
     <script>
+
+        let language = 'zh';
+        let unit = 'kg';
+        setDefaultWeight();
+        updateChart();
+
         function adjustSlider(sliderId, step) {
             const slider = document.getElementById(sliderId);
             let newValue = parseFloat(slider.value) + step;
@@ -403,12 +404,23 @@
             }
         }
 
+        function calculateCaseyButtMax(H, W, A, bodyFatPercent) {
+            // Casey Butt 正確公式
+            let leanMass = Math.pow(H, 1.5) * (Math.sqrt(W) / 322.4 + Math.sqrt(A) / 241.9) * (bodyFatPercent / 224 + 1);
 
-        function calculateCaseyButtMax(H, W, A) {
-            let userWeight = parseFloat(document.getElementById('userWeight').value);
-            let M = Math.pow(H, 1.5) * (Math.sqrt(W) / 322.4 + Math.sqrt(A) / 241.9) * (userWeight / 224 + 1);
-            let realisticM = M * 0.95;
-            return { max: M.toFixed(1), realistic: realisticM.toFixed(1) };
+            // 根據目標體脂率推估的總體重
+            let totalBodyWeight = leanMass / (1 - bodyFatPercent / 100);
+
+            // 現實可達（95%）
+            let realisticLeanMass = leanMass * 0.95;
+            let realisticTotalWeight = totalBodyWeight * 0.95;
+
+            return {
+                leanMass: leanMass.toFixed(1),
+                totalWeight: totalBodyWeight.toFixed(1),
+                realisticLeanMass: realisticLeanMass.toFixed(1),
+                realisticTotalWeight: realisticTotalWeight.toFixed(1)
+            };
         }
 
 
@@ -432,85 +444,21 @@
             updateCaseyButtResult();
         }
 
-
         function updateCaseyButtResult() {
             let H = parseInt(document.getElementById('heightInput').value);
             let W = parseFloat(document.getElementById('wristInput').value);
             let A = parseFloat(document.getElementById('ankleInput').value);
-            let targetBodyFat = parseFloat(document.getElementById('targetBodyFatInput').value) / 100;
+            let bodyFatPercent = parseFloat(document.getElementById('targetBodyFatInput').value);
+            let bodyWeight = parseFloat(document.getElementById('userWeight').value);
 
-            let result = calculateCaseyButtMax(H, W, A);
+            let result = calculateCaseyButtMax(H, W, A, bodyFatPercent, bodyWeight);
 
-            document.getElementById('maxLeanMass').innerText = result.max;
-            document.getElementById('realisticLeanMass').innerText = result.realistic;
-
-            // 計算總體重
-            let maxBodyWeight = parseFloat(result.max) / (1 - targetBodyFat);
-            let realisticBodyWeight = parseFloat(result.realistic) / (1 - targetBodyFat);
-
-            document.getElementById('maxBodyWeight').innerText = maxBodyWeight.toFixed(1);
-            document.getElementById('realisticBodyWeight').innerText = realisticBodyWeight.toFixed(1);
-
-            // 計算脂肪重量
-            let maxFatMass = maxBodyWeight - parseFloat(result.max);
-            let realisticFatMass = realisticBodyWeight - parseFloat(result.realistic);
-
-            // 繪製堆疊式長條圖
-            let data = [
-                {
-                    y: ['理論最大體重'],
-                    x: [parseFloat(result.max)],
-                    name: '去脂體重',
-                    type: 'bar',
-                    orientation: 'h',
-                    marker: { color: 'green' },
-                    text: [parseFloat(result.max).toFixed(1) + ' kg'],
-                    textposition: 'inside'
-                },
-                {
-                    y: ['理論最大體重'],
-                    x: [maxFatMass],
-                    name: '脂肪重量',
-                    type: 'bar',
-                    orientation: 'h',
-                    marker: { color: 'orange' },
-                    text: [maxFatMass.toFixed(1) + ' kg'],
-                    textposition: 'inside'
-                },
-                {
-                    y: ['95% 現實可達體重'],
-                    x: [parseFloat(result.realistic)],
-                    name: '去脂體重',
-                    type: 'bar',
-                    orientation: 'h',
-                    marker: { color: 'blue' },
-                    text: [parseFloat(result.realistic).toFixed(1) + ' kg'],
-                    textposition: 'inside'
-                },
-                {
-                    y: ['95% 現實可達體重'],
-                    x: [realisticFatMass],
-                    name: '脂肪重量',
-                    type: 'bar',
-                    orientation: 'h',
-                    marker: { color: 'orange' },
-                    text: [realisticFatMass.toFixed(1) + ' kg'],
-                    textposition: 'inside'
-                }
-            ];
-
-            let layout = {
-                title: '理論最大體重與脂肪比例',
-                barmode: 'stack',
-                xaxis: { title: '體重 (kg)', range: [0, Math.ceil(maxBodyWeight * 1.1)] },
-                height: 400
-            };
-
-            Plotly.newPlot('stackedBarChart', data, layout);
+            // 顯示結果
+            document.getElementById('maxLeanMass').innerText = result.leanMass + ' kg';
+            document.getElementById('maxBodyWeight').innerText = result.totalWeight + ' kg';
+            document.getElementById('realisticLeanMass').innerText = result.realisticLeanMass + ' kg';
+            document.getElementById('realisticBodyWeight').innerText = result.realisticTotalWeight + ' kg';
         }
-
-        let language = 'zh';
-        let unit = 'kg';
 
         const movementParams = {
             "male": {
@@ -694,9 +642,6 @@
             };
             return names[movement];
         }
-
-        setDefaultWeight();
-        updateChart();
 
         const labels = {
             zh: {
