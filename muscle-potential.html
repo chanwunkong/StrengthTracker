@@ -1,0 +1,64 @@
+<h2>依體脂率推估的最大肌肉潛力與總體重計算器</h2>
+<!-- 依體脂率推估的最大肌肉潛力與總體重計算器 -->
+<div class="section">
+    <div class="slider-group">
+        <div class="slider-label">
+            <label for="heightInput">身高 (cm):</label>
+            <span id="heightDisplay">175 cm</span>
+        </div>
+        <div class="slider-control">
+            <button onclick="adjustSlider('heightInput', -1)">-</button>
+            <input type="range" id="heightInput" min="140" max="220" value="175" step="1"
+                oninput="updateHeight(this.value)">
+            <button onclick="adjustSlider('heightInput', 1)">+</button>
+        </div>
+    </div>
+
+    <div class="slider-group">
+        <div class="slider-label">
+            <label for="wristInput">手腕圍 (cm):</label>
+            <span id="wristDisplay">16.5 cm</span>
+        </div>
+        <div class="slider-control">
+            <button onclick="adjustSlider('wristInput', -0.1)">-</button>
+            <input type="range" id="wristInput" min="12" max="24" value="16.5" step="0.1"
+                oninput="updateWrist(this.value)">
+            <button onclick="adjustSlider('wristInput', 0.1)">+</button>
+        </div>
+    </div>
+
+    <div class="slider-group">
+        <div class="slider-label">
+            <label for="ankleInput">腳踝圍 (cm):</label>
+            <span id="ankleDisplay">22 cm</span>
+        </div>
+        <div class="slider-control">
+            <button onclick="adjustSlider('ankleInput', -0.1)">-</button>
+            <input type="range" id="ankleInput" min="15" max="30" value="22" step="0.1"
+                oninput="updateAnkle(this.value)">
+            <button onclick="adjustSlider('ankleInput', 0.1)">+</button>
+        </div>
+    </div>
+
+
+
+    <div class="slider-group">
+        <div class="slider-label">
+            <label for="targetBodyFatInput">目標體脂率 (%):</label>
+            <span id="targetBodyFatDisplay">15 %</span>
+        </div>
+        <div class="slider-control">
+            <button onclick="adjustSlider('targetBodyFatInput', -1)">-</button>
+            <input type="range" id="targetBodyFatInput" min="5" max="30" value="15" step="1"
+                oninput="updateTargetBodyFat(this.value)">
+            <button onclick="adjustSlider('targetBodyFatInput', 1)">+</button>
+        </div>
+    </div>
+
+    <h4>理論最大無脂體重：<span id="maxLeanMass">0</span> kg</h4>
+    <h4>理論最大體重：<span id="maxBodyWeight">0</span> kg</h4>
+    <h4>95% 現實可達無脂體重：<span id="realisticLeanMass">0</span> kg</h4>
+    <h4>95% 現實可達體重：<span id="realisticBodyWeight">0</span> kg</h4>
+
+</div>
+<div id="musclePotentialResults"></div>
