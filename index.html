@@ -370,12 +370,6 @@
     </main>
 
     <script>
-
-        let language = 'zh';
-        let unit = 'kg';
-        setDefaultWeight();
-        updateChart();
-
         function adjustSlider(sliderId, step) {
             const slider = document.getElementById(sliderId);
             let newValue = parseFloat(slider.value) + step;
@@ -404,14 +398,10 @@
             }
         }
 
-        function calculateCaseyButtMax(H, W, A, bodyFatPercent) {
-            // Casey Butt 正確公式
-            let leanMass = Math.pow(H, 1.5) * (Math.sqrt(W) / 322.4 + Math.sqrt(A) / 241.9) * (bodyFatPercent / 224 + 1);
-
-            // 根據目標體脂率推估的總體重
+        function calculateCaseyButtMax(H, W, A, bodyFatPercent, bodyWeight) {
+            let fatMass = bodyWeight * (bodyFatPercent / 100);
+            let leanMass = Math.pow(H, 1.5) * (Math.sqrt(W) / 322.4 + Math.sqrt(A) / 241.9) * (fatMass / 224 + 1);
             let totalBodyWeight = leanMass / (1 - bodyFatPercent / 100);
-
-            // 現實可達（95%）
             let realisticLeanMass = leanMass * 0.95;
             let realisticTotalWeight = totalBodyWeight * 0.95;
 
@@ -421,6 +411,22 @@
                 realisticLeanMass: realisticLeanMass.toFixed(1),
                 realisticTotalWeight: realisticTotalWeight.toFixed(1)
             };
+        }
+
+
+        function updateCaseyButtResult() {
+            let H = parseInt(document.getElementById('heightInput').value);
+            let W = parseFloat(document.getElementById('wristInput').value);
+            let A = parseFloat(document.getElementById('ankleInput').value);
+            let bodyFatPercent = parseFloat(document.getElementById('targetBodyFatInput').value);
+            let bodyWeight = parseFloat(document.getElementById('userWeight').value);
+
+            let result = calculateCaseyButtMax(H, W, A, bodyFatPercent, bodyWeight);
+
+            document.getElementById('maxLeanMass').innerText = result.leanMass + ' kg';
+            document.getElementById('maxBodyWeight').innerText = result.totalWeight + ' kg';
+            document.getElementById('realisticLeanMass').innerText = result.realisticLeanMass + ' kg';
+            document.getElementById('realisticBodyWeight').innerText = result.realisticTotalWeight + ' kg';
         }
 
 
@@ -444,21 +450,25 @@
             updateCaseyButtResult();
         }
 
-        function updateCaseyButtResult() {
-            let H = parseInt(document.getElementById('heightInput').value);
-            let W = parseFloat(document.getElementById('wristInput').value);
-            let A = parseFloat(document.getElementById('ankleInput').value);
-            let bodyFatPercent = parseFloat(document.getElementById('targetBodyFatInput').value);
-            let bodyWeight = parseFloat(document.getElementById('userWeight').value);
 
-            let result = calculateCaseyButtMax(H, W, A, bodyFatPercent, bodyWeight);
+        function calculateCaseyButtMax(H, W, A, bodyFatPercent) {
+            let leanMass = Math.pow(H, 1.5) * (Math.sqrt(W) / 322.4 + Math.sqrt(A) / 241.9) * (bodyFatPercent / 224 + 1);
 
-            // 顯示結果
-            document.getElementById('maxLeanMass').innerText = result.leanMass + ' kg';
-            document.getElementById('maxBodyWeight').innerText = result.totalWeight + ' kg';
-            document.getElementById('realisticLeanMass').innerText = result.realisticLeanMass + ' kg';
-            document.getElementById('realisticBodyWeight').innerText = result.realisticTotalWeight + ' kg';
+            let totalBodyWeight = leanMass / (1 - bodyFatPercent / 100);
+
+            let realisticLeanMass = leanMass * 0.95;
+            let realisticTotalWeight = totalBodyWeight * 0.95;
+
+            return {
+                leanMass: leanMass.toFixed(1),
+                totalWeight: totalBodyWeight.toFixed(1),
+                realisticLeanMass: realisticLeanMass.toFixed(1),
+                realisticTotalWeight: realisticTotalWeight.toFixed(1)
+            };
         }
+
+        let language = 'zh';
+        let unit = 'kg';
 
         const movementParams = {
             "male": {
@@ -642,6 +652,9 @@
             };
             return names[movement];
         }
+
+        setDefaultWeight();
+        updateChart();
 
         const labels = {
             zh: {
