@@ -77,6 +77,7 @@ function updateUserStrength(value) {
 }
 
 function updateChart() {
+    
     language = document.getElementById('languageSelect').value;
     unit = document.getElementById('unitSelect').value;
 
@@ -158,7 +159,7 @@ function updateChart() {
     const layout = {
         title: getChartTitle(weight, movement, gender),
         xaxis: { title: language === 'zh' ? '訓練時間（月）' : 'Training Time (Months)', range: [0, xMax] },
-        yaxis: { title: language === 'zh' ? '絕對力量 (' + unit + ')' : 'Absolute Strength (' + unit + ')', range: [0, yMax] }
+        yaxis: { title: language === 'zh' ? '最大力量 (' + unit + ')' : 'Absolute Strength (' + unit + ')', range: [0, yMax] }
     };
 
     if (userTrace) {

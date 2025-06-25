@@ -1,127 +1,135 @@
 <h2>力量成長曲線</h2>
-<div>
-    <!-- 基本控制區 -->
-    <div class="section">
-        <h3>基本設定</h3>
 
-        <div class="slider-group">
-            <label>選擇性別:</label>
-            <div class="radio-group">
-                <div class="radio-option">
-                    <input type="radio" id="male" name="gender" value="male" checked
-                        onchange="setDefaultWeight(); updateChart()">
-                    <label for="male">男性</label>
+<div class="strength-container">
+    <!-- 左側：基本設定 + 個人資料輸入 -->
+    <div class="left-panel">
+        <!-- 基本設定 -->
+        <div class="section">
+            <h3>基本設定</h3>
+
+            <div class="slider-group">
+                <label>選擇性別:</label>
+                <div class="radio-group">
+                    <div class="radio-option">
+                        <input type="radio" id="male" name="gender" value="male" checked
+                            onchange="setDefaultWeight(); updateChart()">
+                        <label for="male">男性</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="female" name="gender" value="female"
+                            onchange="setDefaultWeight(); updateChart()">
+                        <label for="female">女性</label>
+                    </div>
                 </div>
-                <div class="radio-option">
-                    <input type="radio" id="female" name="gender" value="female"
-                        onchange="setDefaultWeight(); updateChart()">
-                    <label for="female">女性</label>
+            </div>
+
+            <div class="slider-group">
+                <label>選擇動作:</label>
+                <div class="radio-group" id="movementRadioGroup">
+                    <div class="radio-option">
+                        <input type="radio" id="press" name="movement" value="Press" checked onchange="updateChart()">
+                        <label for="press">肩推</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="benchPress" name="movement" value="Bench Press"
+                            onchange="updateChart()">
+                        <label for="benchPress">臥推</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="squat" name="movement" value="Squat" onchange="updateChart()">
+                        <label for="squat">深蹲</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="deadlift" name="movement" value="Deadlift" onchange="updateChart()">
+                        <label for="deadlift">硬舉</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="powerClean" name="movement" value="Power Clean"
+                            onchange="updateChart()">
+                        <label for="powerClean">抓舉</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-label">
+                    <label for="xMaxRange">X 軸最大值 (月):</label>
+                    <span id="xMaxDisplay">60 月</span>
+                </div>
+                <div class="slider-control">
+                    <button onclick="adjustSlider('xMaxRange', -1)">-</button>
+                    <input type="range" id="xMaxRange" min="12" max="150" value="60" step="1" oninput="updateChart()">
+                    <button onclick="adjustSlider('xMaxRange', 1)">+</button>
+                </div>
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-label">
+                    <label for="yMaxRange">Y 軸最大值:</label>
+                    <span id="yMaxDisplay">200 kg</span>
+                </div>
+                <div class="slider-control">
+                    <button onclick="adjustSlider('yMaxRange', -10)">-</button>
+                    <input type="range" id="yMaxRange" min="50" max="500" value="200" step="10" oninput="updateChart()">
+                    <button onclick="adjustSlider('yMaxRange', 10)">+</button>
                 </div>
             </div>
         </div>
 
-        <div class="slider-group">
-            <label>選擇動作:</label>
-            <div class="radio-group" id="movementRadioGroup">
-                <div class="radio-option">
-                    <input type="radio" id="press" name="movement" value="Press" checked onchange="updateChart()">
-                    <label for="press">肩推</label>
-                </div>
-                <div class="radio-option">
-                    <input type="radio" id="benchPress" name="movement" value="Bench Press" onchange="updateChart()">
-                    <label for="benchPress">臥推</label>
-                </div>
-                <div class="radio-option">
-                    <input type="radio" id="squat" name="movement" value="Squat" onchange="updateChart()">
-                    <label for="squat">深蹲</label>
-                </div>
-                <div class="radio-option">
-                    <input type="radio" id="deadlift" name="movement" value="Deadlift" onchange="updateChart()">
-                    <label for="deadlift">硬舉</label>
-                </div>
-                <div class="radio-option">
-                    <input type="radio" id="powerClean" name="movement" value="Power Clean" onchange="updateChart()">
-                    <label for="powerClean">抓舉</label>
-                </div>
-            </div>
-        </div>
+        <!-- 個人資料輸入 -->
+        <div class="section">
+            <h3>個人資料輸入</h3>
 
+            <div class="slider-group">
+                <div class="slider-label">
+                    <label for="userWeight">您的體重:</label>
+                    <span><span id="userWeightValue">70</span> <span id="userWeightUnit">kg</span></span>
+                </div>
+                <div class="slider-control">
+                    <button onclick="adjustSlider('userWeight', -1)">-</button>
+                    <input type="range" id="userWeight" min="30" max="150" value="70" step="1"
+                        oninput="updateUserWeight(this.value)">
+                    <button onclick="adjustSlider('userWeight', 1)">+</button>
+                </div>
+            </div>
 
-        <div class="slider-group">
-            <div class="slider-label">
-                <label for="xMaxRange">X 軸最大值 (月):</label>
-                <span id="xMaxDisplay">60 月</span>
+            <div class="slider-group">
+                <div class="slider-label">
+                    <label for="userRM">您的 RM (次數):</label>
+                    <span id="userRMValue">5</span>
+                </div>
+                <div class="slider-control">
+                    <button onclick="adjustSlider('userRM', -1)">-</button>
+                    <input type="range" id="userRM" min="1" max="15" value="5" step="1"
+                        oninput="updateUserRM(this.value)">
+                    <button onclick="adjustSlider('userRM', 1)">+</button>
+                </div>
             </div>
-            <div class="slider-control">
-                <button onclick="adjustSlider('xMaxRange', -1)">-</button>
-                <input type="range" id="xMaxRange" min="12" max="150" value="60" step="1" oninput="updateChart()">
-                <button onclick="adjustSlider('xMaxRange', 1)">+</button>
-            </div>
-        </div>
 
-        <div class="slider-group">
-            <div class="slider-label">
-                <label for="yMaxRange">Y 軸最大值:</label>
-                <span id="yMaxDisplay">200 kg</span>
+            <div class="slider-group">
+                <div class="slider-label">
+                    <label for="userStrength">您該 RM 的重量:</label>
+                    <span><span id="userStrengthValue">50</span> <span id="userStrengthUnit">kg</span></span>
+                </div>
+                <div class="slider-control">
+                    <button onclick="adjustSlider('userStrength', -1)">-</button>
+                    <input type="range" id="userStrength" min="0" max="300" value="50" step="1"
+                        oninput="updateUserStrength(this.value)">
+                    <button onclick="adjustSlider('userStrength', 1)">+</button>
+                </div>
             </div>
-            <div class="slider-control">
-                <button onclick="adjustSlider('yMaxRange', -10)">-</button>
-                <input type="range" id="yMaxRange" min="50" max="500" value="200" step="10" oninput="updateChart()">
-                <button onclick="adjustSlider('yMaxRange', 10)">+</button>
-            </div>
+
+            <h4 id="oneRMDisplay">預估 1RM：<span id="oneRMValue">0</span> <span id="oneRMUnit">kg</span></h4>
         </div>
     </div>
 
-    <!-- 個人資料輸入 -->
-    <div class="section">
-        <h3>個人資料輸入</h3>
-
-        <div class="slider-group">
-            <div class="slider-label">
-                <label for="userWeight">您的體重:</label>
-                <span><span id="userWeightValue">70</span> <span id="userWeightUnit">kg</span></span>
+    <!-- 右側：結果顯示 -->
+    <div class="right-panel">
+        <div class="section">
+            <h3>結果顯示</h3>
+            <div class="chart-container">
+                <div id="chart"></div>
             </div>
-            <div class="slider-control">
-                <button onclick="adjustSlider('userWeight', -1)">-</button>
-                <input type="range" id="userWeight" min="30" max="150" value="70" step="1"
-                    oninput="updateUserWeight(this.value)">
-                <button onclick="adjustSlider('userWeight', 1)">+</button>
-            </div>
-        </div>
-
-        <div class="slider-group">
-            <div class="slider-label">
-                <label for="userRM">您的 RM (次數):</label>
-                <span id="userRMValue">5</span>
-            </div>
-            <div class="slider-control">
-                <button onclick="adjustSlider('userRM', -1)">-</button>
-                <input type="range" id="userRM" min="1" max="15" value="5" step="1" oninput="updateUserRM(this.value)">
-                <button onclick="adjustSlider('userRM', 1)">+</button>
-            </div>
-        </div>
-
-        <div class="slider-group">
-            <div class="slider-label">
-                <label for="userStrength">您該 RM 的重量:</label>
-                <span><span id="userStrengthValue">0</span> <span id="userStrengthUnit">kg</span></span>
-            </div>
-            <div class="slider-control">
-                <button onclick="adjustSlider('userStrength', -1)">-</button>
-                <input type="range" id="userStrength" min="0" max="300" value="0" step="1"
-                    oninput="updateUserStrength(this.value)">
-                <button onclick="adjustSlider('userStrength', 1)">+</button>
-            </div>
-        </div>
-
-        <h4 id="oneRMDisplay">預估 1RM：<span id="oneRMValue">0</span> <span id="oneRMUnit">kg</span></h4>
-    </div>
-
-    <!-- 結果顯示 -->
-    <div class="section">
-        <h3>結果顯示</h3>
-        <div class="chart-container">
-            <div id="chart"></div>
         </div>
     </div>
-    <div id="strengthGrowthChart"></div>
+</div>

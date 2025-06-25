@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <title>複合階段體重規劃計算器</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            display: flex;
+            gap: 20px;
+        }
+
+        input,
+        select {
+            margin: 5px;
+        }
+
+        table {
+            border-collapse: collapse;
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        th,
+        td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .left-panel {
+            width: 250px;
+        }
+
+        .left-panel button {
+            display: block;
+            width: 100%;
+            margin-bottom: 5px;
+            padding: 8px;
+        }
+
+        .left-panel button.active {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .form-area {
+            flex-grow: 1;
+        }
+
+        canvas {
+            max-width: 100%;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="left-panel">
+        <h3>初始條件</h3>
+        <label>初始體重 (kg): <input type="number" id="startWeight" value="80"></label><br>
+        <label>初始體脂率 (%): <input type="number" id="startBodyFat" value="25"></label><br>
+
+        <h3>階段列表</h3>
+        <div id="stageButtons"></div>
+        <button onclick="addStage()">+ 新增階段</button><br>
+
+        <button class="btn" onclick="calculate()">開始計算</button>
+    </div>
+
+    <div class="form-area">
+        <h3>階段編輯區</h3>
+        <div id="stageForm" style="display:none;">
+            <label>階段名稱: <input type="text" id="stageName"></label><br>
+
+            <label>訓練年資:
+                <select id="trainingLevel" onchange="recommendValues()">
+                    <option value="">請選擇</option>
+                    <option value="newbie">新手</option>
+                    <option value="intermediate">中階</option>
+                    <option value="advanced">進階</option>
+                    <option value="expert">高階</option>
+                </select>
+            </label><br>
+
+            <label>目標類型:
+                <select id="goalType" onchange="recommendValues()">
+                    <option value="bulking">增肌期</option>
+                    <option value="cutting">減脂期</option>
+                    <option value="maintenance">休息期</option>
+                </select>
+            </label><br>
+
+            <label>每週體重變化 (kg): <input type="number" id="weeklyChange" step="0.01"></label><br>
+            <label>肌肉變化比例 (%): <input type="number" id="muscleRatio" step="1"></label><br>
+
+            <label>條件邏輯:
+                <select id="conditionLogic">
+                    <option value="OR">OR（任一達成）</option>
+                    <option value="AND">AND（全部達成）</option>
+                </select>
+            </label><br>
+
+            <div id="conditionList"></div>
+            <button onclick="addCondition()">+ 新增條件</button><br>
+
+            <h4>休息期設定（階段專屬）</h4>
+            <label>每幾週進入休息期: <input type="number" id="restInterval" value="12"></label><br>
+            <label>休息期持續週數: <input type="number" id="restDuration" value="2"></label><br>
+
+            <button onclick="saveStage()">儲存</button>
+            <button onclick="deleteStage()">刪除此階段</button>
+        </div>
+
+        <canvas id="combinedChart"></canvas>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        let stages = [];
+        let selectedStageIndex = null;
+        let combinedChart;
+
+        function addStage() {
+            const stage = {
+                name: '階段 ' + (stages.length + 1),
+                trainingLevel: '',
+                goalType: 'bulking',
+                weeklyChange: 0,
+                muscleRatio: 50,
+                conditionLogic: 'OR',
+                conditions: [],
+                restInterval: 12,
+                restDuration: 2
+            };
+            stages.push(stage);
+            selectedStageIndex = stages.length - 1;
+            renderStageButtons();
+            loadStage();
+        }
+
+        function renderStageButtons() {
+            const container = document.getElementById('stageButtons');
+            container.innerHTML = '';
+            stages.forEach((stage, index) => {
+                const button = document.createElement('button');
+                button.innerText = stage.name;
+                button.className = index === selectedStageIndex ? 'active' : '';
+                button.onclick = () => {
+                    selectedStageIndex = index;
+                    renderStageButtons();
+                    loadStage();
+                };
+                container.appendChild(button);
+            });
+        }
+
+        function loadStage() {
+            if (selectedStageIndex === null) return;
+            const stage = stages[selectedStageIndex];
+            document.getElementById('stageForm').style.display = 'block';
+            document.getElementById('stageName').value = stage.name;
+            document.getElementById('trainingLevel').value = stage.trainingLevel;
+            document.getElementById('goalType').value = stage.goalType;
+            document.getElementById('weeklyChange').value = stage.weeklyChange;
+            document.getElementById('muscleRatio').value = stage.muscleRatio;
+            document.getElementById('conditionLogic').value = stage.conditionLogic;
+            document.getElementById('restInterval').value = stage.restInterval;
+            document.getElementById('restDuration').value = stage.restDuration;
+            renderConditionList();
+        }
+
+        function renderConditionList() {
+            const container = document.getElementById('conditionList');
+            container.innerHTML = '';
+            const stage = stages[selectedStageIndex];
+            stage.conditions.forEach((cond, idx) => {
+                const div = document.createElement('div');
+                div.innerHTML = `
+      <label>條件: 
+        <select onchange="updateCondition(${idx}, 'type', this.value)">
+          <option value="bodyFatPercent" ${cond.type === 'bodyFatPercent' ? 'selected' : ''}>體脂率 (%)</option>
+          <option value="leanBodyMass" ${cond.type === 'leanBodyMass' ? 'selected' : ''}>除脂體重 (kg)</option>
+          <option value="weight" ${cond.type === 'weight' ? 'selected' : ''}>體重 (kg)</option>
+        </select>
+        <select onchange="updateCondition(${idx}, 'operator', this.value)">
+          <option value="<=" ${cond.operator === '<=' ? 'selected' : ''}>&le;</option>
+          <option value=">=" ${cond.operator === '>=' ? 'selected' : ''}>&ge;</option>
+        </select>
+        <input type="number" value="${cond.value}" onchange="updateCondition(${idx}, 'value', this.value)">
+        <button onclick="deleteCondition(${idx})">刪除</button>
+      </label><br>
+    `;
+                container.appendChild(div);
+            });
+        }
+
+        function updateCondition(idx, key, value) {
+            if (key === 'value') value = parseFloat(value);
+            stages[selectedStageIndex].conditions[idx][key] = value;
+        }
+
+        function addCondition() {
+            stages[selectedStageIndex].conditions.push({ type: 'bodyFatPercent', operator: '<=', value: 15 });
+            renderConditionList();
+        }
+
+        function deleteCondition(idx) {
+            stages[selectedStageIndex].conditions.splice(idx, 1);
+            renderConditionList();
+        }
+
+        function saveStage() {
+            if (selectedStageIndex === null) return;
+            const stage = stages[selectedStageIndex];
+            stage.name = document.getElementById('stageName').value;
+            stage.trainingLevel = document.getElementById('trainingLevel').value;
+            stage.goalType = document.getElementById('goalType').value;
+            stage.weeklyChange = parseFloat(document.getElementById('weeklyChange').value);
+            stage.muscleRatio = parseFloat(document.getElementById('muscleRatio').value);
+            stage.conditionLogic = document.getElementById('conditionLogic').value;
+            stage.restInterval = parseInt(document.getElementById('restInterval').value);
+            stage.restDuration = parseInt(document.getElementById('restDuration').value);
+            renderStageButtons();
+        }
+
+        function recommendValues() {
+            if (selectedStageIndex === null) return;
+            const trainingLevel = document.getElementById('trainingLevel').value;
+            const goalType = document.getElementById('goalType').value;
+
+            let recommendedChange = 0;
+            let recommendedRatio = 50;
+
+            if (goalType === 'bulking') {
+                if (trainingLevel === 'newbie') { recommendedChange = 0.15; recommendedRatio = 80; }
+                else if (trainingLevel === 'intermediate') { recommendedChange = 0.10; recommendedRatio = 60; }
+                else if (trainingLevel === 'advanced') { recommendedChange = 0.05; recommendedRatio = 50; }
+                else if (trainingLevel === 'expert') { recommendedChange = 0.03; recommendedRatio = 30; }
+            } else if (goalType === 'cutting') {
+                if (trainingLevel === 'newbie') { recommendedChange = -0.75; recommendedRatio = 15; }
+                else if (trainingLevel === 'intermediate') { recommendedChange = -0.60; recommendedRatio = 20; }
+                else if (trainingLevel === 'advanced') { recommendedChange = -0.50; recommendedRatio = 25; }
+                else if (trainingLevel === 'expert') { recommendedChange = -0.40; recommendedRatio = 30; }
+            } else if (goalType === 'maintenance') {
+                recommendedChange = 0.00;
+                recommendedRatio = 50;
+            }
+
+            document.getElementById('weeklyChange').value = recommendedChange.toFixed(2);
+            document.getElementById('muscleRatio').value = recommendedRatio;
+        }
+
+        function calculate() {
+            const startWeight = parseFloat(document.getElementById('startWeight').value);
+            const startBodyFat = parseFloat(document.getElementById('startBodyFat').value);
+
+            let weight = startWeight;
+            let bodyFatPercent = startBodyFat;
+            let leanBodyMass = weight * (1 - bodyFatPercent / 100);
+
+            let resultRows = [];
+            let week = 0;
+
+            for (let i = 0; i < stages.length; i++) {
+                const stage = stages[i];
+                const fatRatio = 1 - (stage.muscleRatio / 100);
+                const restInterval = stage.restInterval;
+                const restDuration = stage.restDuration;
+
+                while (true) {
+                    week++;
+
+                    if (restInterval > 0 && (week - 1) % (restInterval + restDuration) >= restInterval && restDuration > 0) {
+                        resultRows.push({
+                            week,
+                            weight: weight.toFixed(2),
+                            leanBodyMass: leanBodyMass.toFixed(2),
+                            bodyFatPercent: bodyFatPercent.toFixed(2),
+                            stage: '休息期'
+                        });
+                        continue;
+                    }
+
+                    const weightChange = stage.weeklyChange;
+                    const muscleChange = weightChange * (stage.muscleRatio / 100);
+                    weight += weightChange;
+                    leanBodyMass += muscleChange;
+                    let fatMass = weight - leanBodyMass;
+                    bodyFatPercent = (fatMass / weight) * 100;
+
+                    resultRows.push({
+                        week,
+                        weight: weight.toFixed(2),
+                        leanBodyMass: leanBodyMass.toFixed(2),
+                        bodyFatPercent: bodyFatPercent.toFixed(2),
+                        stage: stage.name
+                    });
+
+                    const conditions = stage.conditions.map(cond => {
+                        let currentValue = 0;
+                        if (cond.type === 'bodyFatPercent') currentValue = bodyFatPercent;
+                        if (cond.type === 'leanBodyMass') currentValue = leanBodyMass;
+                        if (cond.type === 'weight') currentValue = weight;
+
+                        return cond.operator === '<=' ? currentValue <= cond.value : currentValue >= cond.value;
+                    });
+
+                    const isComplete = stage.conditionLogic === 'AND' ? conditions.every(c => c) : conditions.some(c => c);
+
+                    if (isComplete) break;
+                    if (week > 500) { alert('計算超過 500 週，請檢查設定。'); break; }
+                }
+            }
+
+            displayResults(resultRows);
+            drawCombinedChart(resultRows);
+        }
+
+        function displayResults(rows) {
+            let html = '<h3>結果表格</h3><table><tr><th>週數</th><th>體重 (kg)</th><th>除脂體重 (kg)</th><th>體脂率 (%)</th><th>階段</th></tr>';
+
+            rows.forEach(row => {
+                html += `<tr><td>${row.week}</td><td>${row.weight}</td><td>${row.leanBodyMass}</td><td>${row.bodyFatPercent}</td><td>${row.stage}</td></tr>`;
+            });
+
+            html += '</table>';
+            document.getElementById('results').innerHTML = html;
+        }
+
+        function drawCombinedChart(rows) {
+            const labels = rows.map(r => r.week);
+            const weights = rows.map(r => parseFloat(r.weight));
+            const bodyFats = rows.map(r => parseFloat(r.bodyFatPercent));
+            const lbms = rows.map(r => parseFloat(r.leanBodyMass));
+
+            if (combinedChart) combinedChart.destroy();
+
+            const ctx = document.getElementById('combinedChart').getContext('2d');
+            combinedChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: '體重 (kg)', data: weights, fill: false, borderColor: 'blue' },
+                        { label: '體脂率 (%)', data: bodyFats, fill: false, borderColor: 'red' },
+                        { label: '除脂體重 (kg)', data: lbms, fill: false, borderColor: 'green' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    interaction: { mode: 'index', intersect: false },
+                    stacked: false,
+                    plugins: { title: { display: true, text: '體重 / 體脂率 / 除脂體重 變化圖' } },
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: '單位混合 (kg / %)' } }
+                    }
+                }
+            });
+        }
+    </script>
+
+</body>
+
+</html>
