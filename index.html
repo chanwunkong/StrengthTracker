@@ -58,7 +58,7 @@
         });
 
         loadComponent('bodyPhasePlannerSection', 'body-phase-planner.html', 'js/body-phase-planner.js', () => {
-            // 若有初始化函數可放這
+            if (typeof initializeBodyPhasePlanner === 'function') initializeBodyPhasePlanner();
         });
 
         // 語言或單位切換時同步更新所有模組

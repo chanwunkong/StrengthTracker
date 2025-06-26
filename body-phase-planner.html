@@ -44,32 +44,18 @@
                     <label>階段名稱: <input type="text" id="stageName"></label><br><br>
 
 <label>訓練年資:</label>
-<div class="radio-group" id="trainingLevelGroup">
-    <label class="radio-option">
-        <input type="radio" name="trainingLevel" value="newbie" onchange="recommendValues()"> 新手
-    </label>
-    <label class="radio-option">
-        <input type="radio" name="trainingLevel" value="intermediate" onchange="recommendValues()"> 中階
-    </label>
-    <label class="radio-option">
-        <input type="radio" name="trainingLevel" value="advanced" onchange="recommendValues()"> 進階
-    </label>
-    <label class="radio-option">
-        <input type="radio" name="trainingLevel" value="expert" onchange="recommendValues()"> 高階
-    </label>
+<div class="radio-button-group" id="trainingLevelGroup">
+    <button type="button" class="radio-button" data-name="trainingLevel" data-value="newbie" onclick="selectRadioButton(this)">新手</button>
+    <button type="button" class="radio-button" data-name="trainingLevel" data-value="intermediate" onclick="selectRadioButton(this)">中階</button>
+    <button type="button" class="radio-button" data-name="trainingLevel" data-value="advanced" onclick="selectRadioButton(this)">進階</button>
+    <button type="button" class="radio-button" data-name="trainingLevel" data-value="expert" onclick="selectRadioButton(this)">高階</button>
 </div><br><br>
 
 <label>目標類型:</label>
-<div class="radio-group" id="goalTypeGroup">
-    <label class="radio-option">
-        <input type="radio" name="goalType" value="bulking" onchange="recommendValues()"> 增肌期
-    </label>
-    <label class="radio-option">
-        <input type="radio" name="goalType" value="cutting" onchange="recommendValues()"> 減脂期
-    </label>
-    <label class="radio-option">
-        <input type="radio" name="goalType" value="maintenance" onchange="recommendValues()"> 休息期
-    </label>
+<div class="radio-button-group" id="goalTypeGroup">
+    <button type="button" class="radio-button" data-name="goalType" data-value="bulking" onclick="selectRadioButton(this)">增肌期</button>
+    <button type="button" class="radio-button" data-name="goalType" data-value="cutting" onclick="selectRadioButton(this)">減脂期</button>
+    <button type="button" class="radio-button" data-name="goalType" data-value="maintenance" onclick="selectRadioButton(this)">休息期</button>
 </div><br><br>
 
                     <div class="slider-group">
@@ -108,12 +94,11 @@
                         </div>
                     </div><br>
 
-                    <label>條件邏輯:
-                        <select id="conditionLogic">
-                            <option value="OR">OR（任一達成）</option>
-                            <option value="AND">AND（全部達成）</option>
-                        </select>
-                    </label><br><br>
+<label>條件邏輯:</label>
+<div class="radio-button-group" id="conditionLogicGroup">
+    <button type="button" class="radio-button" data-key="conditionLogic" data-value="OR" onclick="selectLogicButton(this)">或 (OR)</button>
+    <button type="button" class="radio-button" data-key="conditionLogic" data-value="AND" onclick="selectLogicButton(this)">且 (AND)</button>
+</div><br><br>
 
                     <div id="conditionList"></div>
                     <button onclick="addCondition()">+ 新增條件</button><br><br>
