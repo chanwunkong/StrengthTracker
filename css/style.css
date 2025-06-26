@@ -82,14 +82,16 @@ input[type="range"] {
 }
 
 button {
-    width: 30px;
-    height: 30px;
+    min-width: 30px;  /* 不設固定寬度，讓按鈕寬度根據文字自動擴張 */
+    height: 35px;      /* 建議稍微高一點，讓文字更舒適 */
+    padding: 5px 10px; /* 內距，保持按鈕的空間感 */
     font-size: 16px;
     cursor: pointer;
     background-color: #f0f0f0;
     border: 1px solid #ccc;
     border-radius: 4px;
     transition: background-color 0.2s;
+    white-space: nowrap; /* 避免文字換行 */
 }
 
 button:hover {
@@ -126,4 +128,10 @@ button:hover {
     .right-panel {
         flex: 1;
     }
+}
+
+button.active {
+    background-color: #4CAF50; /* 綠色背景 */
+    color: white;
+    font-weight: bold;
 }

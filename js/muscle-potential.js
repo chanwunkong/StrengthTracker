@@ -1,19 +1,26 @@
+let currentWeight = 80;
+let currentBodyFat = 25;
+
+function updateCurrentWeight(value) {
+    currentWeight = parseFloat(value);
+    document.getElementById('currentWeightDisplay').innerText = value + ' kg';
+    updateBodyFatImpactChart();
+}
+
+function updateCurrentBodyFat(value) {
+    currentBodyFat = parseFloat(value);
+    document.getElementById('currentBodyFatDisplay').innerText = value + ' %';
+    updateBodyFatImpactChart();
+}
+
 function adjustSlider(sliderId, step) {
     const slider = document.getElementById(sliderId);
     let newValue = parseFloat(slider.value) + step;
 
     if (newValue >= parseFloat(slider.min) && newValue <= parseFloat(slider.max)) {
         slider.value = newValue;
-
-        if (sliderId === 'heightInput') {
-            updateHeight(newValue);
-        } else if (sliderId === 'wristInput') {
-            updateWrist(newValue);
-        } else if (sliderId === 'ankleInput') {
-            updateAnkle(newValue);
-        } else if (sliderId === 'targetBodyFatInput') {
-            updateTargetBodyFat(newValue);
-        }
+        
+        slider.dispatchEvent(new Event('input'));
     }
 }
 
@@ -96,10 +103,9 @@ function updateCaseyButtChart() {
         annotations: annotations
     };
 
-    Plotly.newPlot('musclePotentialChart', data, layout);
+Plotly.react('musclePotentialChart', data, layout);
+    updateBodyFatImpactChart();
 }
-
-
 
 function updateHeight(value) {
     document.getElementById('heightDisplay').innerText = value + ' cm';
@@ -121,4 +127,90 @@ function updateTargetBodyFat(value) {
     updateCaseyButtChart();
 }
 
+function updateBodyFatImpactChart() {
+    let H = parseInt(document.getElementById('heightInput').value);
+    let W = parseFloat(document.getElementById('wristInput').value);
+    let A = parseFloat(document.getElementById('ankleInput').value);
+
+    let bodyFatRange = [];
+    let leanMassMax = [];
+    let leanMassRealistic = [];
+    let totalWeightMax = [];
+    let totalWeightRealistic = [];
+
+    let currentLeanMass = currentWeight * (1 - currentBodyFat / 100);
+
+    for (let bf = 5; bf <= 30; bf++) {
+        let result = calculateCaseyButtMax(H, W, A, bf);
+        bodyFatRange.push(bf);
+        leanMassMax.push(parseFloat(result.leanMass));
+        leanMassRealistic.push(parseFloat(result.realisticLeanMass));
+        totalWeightMax.push(parseFloat(result.totalWeight));
+        totalWeightRealistic.push(parseFloat(result.realisticTotalWeight));
+    }
+
+    let trace1 = {
+        x: bodyFatRange,
+        y: leanMassMax,
+        mode: 'lines+markers',
+        name: '理論除脂體重',
+        line: { color: 'rgb(58,200,225)' }
+    };
+
+    let trace2 = {
+        x: bodyFatRange,
+        y: leanMassRealistic,
+        mode: 'lines+markers',
+        name: '現實除脂體重',
+        line: { color: 'rgb(0, 128, 255)', dash: 'dash' }
+    };
+
+    let trace3 = {
+        x: bodyFatRange,
+        y: totalWeightMax,
+        mode: 'lines+markers',
+        name: '理論總體重',
+        line: { color: 'rgb(255,127,14)' }
+    };
+
+    let trace4 = {
+        x: bodyFatRange,
+        y: totalWeightRealistic,
+        mode: 'lines+markers',
+        name: '現實總體重',
+        line: { color: 'rgb(255,0,0)', dash: 'dash' }
+    };
+
+    let currentPointTrace = {
+    x: [currentBodyFat],
+    y: [currentLeanMass],
+    mode: 'markers+text',
+    name: '目前除脂體重',
+    text: ['目前除脂體重: ' + currentLeanMass.toFixed(1) + ' kg'],
+    textposition: 'top center',
+    marker: { color: 'green', size: 12, symbol: 'circle' }
+};
+
+let currentWeightTrace = {
+    x: [currentBodyFat],
+    y: [currentWeight],
+    mode: 'markers+text',
+    name: '目前體重',
+    text: ['目前體重: ' + currentWeight.toFixed(1) + ' kg'],
+    textposition: 'bottom center',
+    marker: { color: 'purple', size: 12, symbol: 'diamond' }
+};
+
+    let layout = {
+        title: '體脂率影響下的肌肉潛力曲線',
+        xaxis: { title: '體脂率 (%)', dtick: 5 },
+        yaxis: { title: '體重 (kg)', range: [0, null] } // 這裡強制 y 軸從 0 開始
+    };
+
+Plotly.react('bodyFatImpactChart', [trace1, trace2, trace3, trace4, currentPointTrace, currentWeightTrace], layout);
+
+
+}
+
 updateCaseyButtChart();
+updateBodyFatImpactChart();

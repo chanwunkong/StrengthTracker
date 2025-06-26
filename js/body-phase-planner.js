@@ -4,21 +4,44 @@ let stages = [];
 let selectedStageIndex = null;
 let combinedChart;
 
-function addStage() {
+function addStage(isInitial = false) {
     const stage = {
         name: '階段 ' + (stages.length + 1),
-        trainingLevel: '',
-        goalType: 'bulking',
-        weeklyCalorieDelta: 0,
-        weeklyChange: 0,
-        muscleRatio: 50,
+        trainingLevel: isInitial ? 'newbie' : '',
+        goalType: isInitial ? 'bulking' : '',
+        weeklyCalorieDelta: isInitial ? 1155 : 0,
+        weeklyChange: isInitial ? 0.15 : 0,
+        muscleRatio: isInitial ? 80 : 50,
         conditionLogic: 'OR',
-        conditions: [],
+        conditions: [
+            { type: 'bodyFatPercent', operator: '<=', value: 15 }
+        ],
         restInterval: 12,
         restDuration: 2
     };
+
     stages.push(stage);
     selectedStageIndex = stages.length - 1;
+
+    renderStageButtons();
+    loadStage();
+}
+
+
+
+
+function deleteStage(index) {
+    stages.splice(index, 1);
+
+    if (selectedStageIndex >= stages.length) {
+        selectedStageIndex = stages.length - 1;
+    }
+
+    if (stages.length === 0) {
+        selectedStageIndex = null;
+        document.getElementById('stageForm').style.display = 'none';
+    }
+
     renderStageButtons();
     loadStage();
 }
@@ -27,6 +50,10 @@ function renderStageButtons() {
     const container = document.getElementById('stageButtons');
     container.innerHTML = '';
     stages.forEach((stage, index) => {
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.display = 'inline-block';
+        buttonContainer.style.margin = '5px';
+
         const button = document.createElement('button');
         button.innerText = stage.name;
         button.className = index === selectedStageIndex ? 'active' : '';
@@ -35,55 +62,162 @@ function renderStageButtons() {
             renderStageButtons();
             loadStage();
         };
-        container.appendChild(button);
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.innerText = '刪除';
+        deleteBtn.style.marginLeft = '5px';
+        deleteBtn.onclick = () => deleteStage(index);
+
+        buttonContainer.appendChild(button);
+        buttonContainer.appendChild(deleteBtn);
+        container.appendChild(buttonContainer);
     });
 }
+
 
 function loadStage() {
     if (selectedStageIndex === null) return;
     const stage = stages[selectedStageIndex];
+
     document.getElementById('stageForm').style.display = 'block';
     document.getElementById('stageName').value = stage.name;
-    document.getElementById('trainingLevel').value = stage.trainingLevel;
-    document.getElementById('goalType').value = stage.goalType;
+
+    // 訓練年資 radio 勾選
+    const trainingRadios = document.getElementsByName('trainingLevel');
+    trainingRadios.forEach(radio => {
+        radio.checked = (radio.value === stage.trainingLevel);
+    });
+
+    // 目標類型 radio 勾選
+    const goalRadios = document.getElementsByName('goalType');
+    goalRadios.forEach(radio => {
+        radio.checked = (radio.value === stage.goalType);
+    });
+
     document.getElementById('weeklyCalorieDelta').value = stage.weeklyCalorieDelta;
+    document.getElementById('weeklyCalorieDeltaDisplay').innerText = stage.weeklyCalorieDelta + ' kcal';
+
     document.getElementById('weeklyChange').value = stage.weeklyChange;
+    document.getElementById('weeklyChangeDisplay').innerText = stage.weeklyChange + ' kg';
+
     document.getElementById('muscleRatio').value = stage.muscleRatio;
+    document.getElementById('muscleRatioDisplay').innerText = stage.muscleRatio + ' %';
+
     document.getElementById('conditionLogic').value = stage.conditionLogic;
+
     document.getElementById('restInterval').value = stage.restInterval;
+    document.getElementById('restIntervalDisplay').innerText = stage.restInterval + ' 週';
+
     document.getElementById('restDuration').value = stage.restDuration;
+    document.getElementById('restDurationDisplay').innerText = stage.restDuration + ' 週';
+
     renderConditionList();
 }
+
 
 function renderConditionList() {
     const container = document.getElementById('conditionList');
     container.innerHTML = '';
     const stage = stages[selectedStageIndex];
+
     stage.conditions.forEach((cond, idx) => {
         const div = document.createElement('div');
+
         div.innerHTML = `
-      <label>條件: 
-        <select onchange="updateCondition(${idx}, 'type', this.value)">
-          <option value="bodyFatPercent" ${cond.type === 'bodyFatPercent' ? 'selected' : ''}>體脂率 (%)</option>
-          <option value="leanBodyMass" ${cond.type === 'leanBodyMass' ? 'selected' : ''}>除脂體重 (kg)</option>
-          <option value="weight" ${cond.type === 'weight' ? 'selected' : ''}>體重 (kg)</option>
-          <option value="stageWeek" ${cond.type === 'stageWeek' ? 'selected' : ''}>階段週數</option>
-        </select>
-        <select onchange="updateCondition(${idx}, 'operator', this.value)">
-          <option value="<=" ${cond.operator === '<=' ? 'selected' : ''}>&le;</option>
-          <option value=">=" ${cond.operator === '>=' ? 'selected' : ''}>&ge;</option>
-        </select>
-        <input type="number" value="${cond.value}" onchange="updateCondition(${idx}, 'value', this.value)">
-        <button onclick="deleteCondition(${idx})">刪除</button>
-      </label><br>
-    `;
+            <div class="radio-group">
+                <label class="radio-option">
+                    <input type="radio" name="conditionType${idx}" value="bodyFatPercent" ${cond.type === 'bodyFatPercent' ? 'checked' : ''} onchange="updateCondition(${idx}, 'type', this.value)"> 體脂率 (%)
+                </label>
+                <label class="radio-option">
+                    <input type="radio" name="conditionType${idx}" value="leanBodyMass" ${cond.type === 'leanBodyMass' ? 'checked' : ''} onchange="updateCondition(${idx}, 'type', this.value)"> 除脂體重 (kg)
+                </label>
+                <label class="radio-option">
+                    <input type="radio" name="conditionType${idx}" value="weight" ${cond.type === 'weight' ? 'checked' : ''} onchange="updateCondition(${idx}, 'type', this.value)"> 體重 (kg)
+                </label>
+                <label class="radio-option">
+                    <input type="radio" name="conditionType${idx}" value="stageWeek" ${cond.type === 'stageWeek' ? 'checked' : ''} onchange="updateCondition(${idx}, 'type', this.value)"> 階段週數
+                </label>
+            </div>
+
+<div class="radio-group">
+    <label class="radio-option">
+        <input type="radio" name="operator${idx}" value="<=" ${cond.operator === '<=' ? 'checked' : ''} onchange="updateCondition(${idx}, 'operator', this.value)"> &le;
+    </label>
+    <label class="radio-option">
+        <input type="radio" name="operator${idx}" value=">=" ${cond.operator === '>=' ? 'checked' : ''} onchange="updateCondition(${idx}, 'operator', this.value)"> &ge;
+    </label>
+</div>
+
+            <div class="slider-group">
+                <div class="slider-label">
+                    <label>數值:</label>
+                    <span id="conditionValueDisplay${idx}">${cond.value}</span>
+                </div>
+                <div class="slider-control">
+                    <button onclick="adjustConditionSlider(${idx}, -1)">-</button>
+                    <input type="range" id="conditionSlider${idx}" min="0" max="100" step="1" value="${cond.value}" oninput="updateConditionValue(${idx}, this.value)">
+                    <button onclick="adjustConditionSlider(${idx}, 1)">+</button>
+                </div>
+            </div>
+
+            <button onclick="deleteCondition(${idx})">刪除</button><br><br>
+        `;
+
         container.appendChild(div);
+
+        // 初始化滑桿範圍
+        setConditionSliderRange(idx, cond.type);
     });
 }
+
+
+function setConditionSliderRange(idx, type) {
+    const slider = document.getElementById('conditionSlider' + idx);
+    if (!slider) return;
+
+    if (type === 'bodyFatPercent') {
+        slider.min = 5;
+        slider.max = 40;
+        slider.step = 1;
+    } else if (type === 'leanBodyMass' || type === 'weight') {
+        slider.min = 30;
+        slider.max = 150;
+        slider.step = 0.5;
+    } else if (type === 'stageWeek') {
+        slider.min = 1;
+        slider.max = 54;
+        slider.step = 1;
+    }
+}
+
+function adjustConditionSlider(idx, delta) {
+    const slider = document.getElementById('conditionSlider' + idx);
+    let newValue = parseFloat(slider.value) + delta;
+
+    if (slider.step) {
+        const step = parseFloat(slider.step);
+        newValue = Math.round(newValue / step) * step;
+    }
+
+    newValue = Math.max(slider.min, Math.min(slider.max, newValue));
+    slider.value = newValue;
+    slider.dispatchEvent(new Event('input'));
+}
+
+function updateConditionValue(idx, value) {
+    document.getElementById('conditionValueDisplay' + idx).innerText = value;
+    updateCondition(idx, 'value', value);
+}
+
+
 
 function updateCondition(idx, key, value) {
     if (key === 'value') value = parseFloat(value);
     stages[selectedStageIndex].conditions[idx][key] = value;
+
+    if (key === 'type') {
+        setConditionSliderRange(idx, value);
+    }
 }
 
 function addCondition() {
@@ -100,26 +234,36 @@ function saveStage() {
     if (selectedStageIndex === null) return;
     const stage = stages[selectedStageIndex];
     stage.name = document.getElementById('stageName').value;
-    stage.trainingLevel = document.getElementById('trainingLevel').value;
-    stage.goalType = document.getElementById('goalType').value;
+
+    stage.trainingLevel = getSelectedRadioValue('trainingLevel');
+    stage.goalType = getSelectedRadioValue('goalType');
+
     stage.weeklyCalorieDelta = parseFloat(document.getElementById('weeklyCalorieDelta').value);
     stage.weeklyChange = parseFloat(document.getElementById('weeklyChange').value);
     stage.muscleRatio = parseFloat(document.getElementById('muscleRatio').value);
     stage.conditionLogic = document.getElementById('conditionLogic').value;
     stage.restInterval = parseInt(document.getElementById('restInterval').value);
     stage.restDuration = parseInt(document.getElementById('restDuration').value);
+
     renderStageButtons();
 }
+
 
 function recommendValues() {
     recommendCalories();
 }
 
-function recommendCalories() {
-    if (selectedStageIndex === null) return;
+function getSelectedRadioValue(name) {
+    const radios = document.getElementsByName(name);
+    for (const radio of radios) {
+        if (radio.checked) return radio.value;
+    }
+    return '';
+}
 
-    const trainingLevel = document.getElementById('trainingLevel').value;
-    const goalType = document.getElementById('goalType').value;
+function recommendValues() {
+    const trainingLevel = getSelectedRadioValue('trainingLevel');
+    const goalType = getSelectedRadioValue('goalType');
 
     const calorieTable = {
         bulking: {
@@ -147,26 +291,133 @@ function recommendCalories() {
     const recommend = calorieTable[goalType][trainingLevel];
 
     document.getElementById('weeklyCalorieDelta').value = recommend.calorie;
-    document.getElementById('weeklyChange').value = recommend.weight.toFixed(2);
+    document.getElementById('weeklyChange').value = recommend.weight;
     document.getElementById('muscleRatio').value = recommend.muscle;
+
+    document.getElementById('weeklyCalorieDeltaDisplay').innerText = recommend.calorie + ' kcal';
+    document.getElementById('weeklyChangeDisplay').innerText = recommend.weight + ' kg';
+    document.getElementById('muscleRatioDisplay').innerText = recommend.muscle + ' %';
+
+    updateCalorieOrWeight('calorie');
+    saveStage();
+}
+
+function updateMuscleRatio(value) {
+    document.getElementById('muscleRatioDisplay').innerText = value + ' %';
     saveStage();
 }
 
 function updateCalorieOrWeight(source) {
-    if (selectedStageIndex === null) return;
-
     const calorieInput = document.getElementById('weeklyCalorieDelta');
     const weightInput = document.getElementById('weeklyChange');
 
     if (source === 'calorie') {
         let kcal = parseFloat(calorieInput.value);
-        weightInput.value = (kcal / 7700).toFixed(2);
+        document.getElementById('weeklyCalorieDeltaDisplay').innerText = kcal + ' kcal';
+
+        let weight = kcal / 7700;
+        weightInput.value = weight.toFixed(2);
+        document.getElementById('weeklyChangeDisplay').innerText = weight.toFixed(2) + ' kg';
     } else if (source === 'weight') {
         let weight = parseFloat(weightInput.value);
-        calorieInput.value = Math.round(weight * 7700);
+        document.getElementById('weeklyChangeDisplay').innerText = weight + ' kg';
+
+        let kcal = Math.round(weight * 7700);
+        calorieInput.value = kcal;
+        document.getElementById('weeklyCalorieDeltaDisplay').innerText = kcal + ' kcal';
     }
+
     saveStage();
 }
+
+
+function adjustSlider(id, delta) {
+    const slider = document.getElementById(id);
+    let newValue = parseFloat(slider.value) + delta;
+
+    if (slider.step) {
+        const step = parseFloat(slider.step);
+        newValue = Math.round(newValue / step) * step;
+    }
+
+    newValue = Math.max(slider.min, Math.min(slider.max, newValue));
+    slider.value = newValue;
+
+    // 強制觸發滑桿事件
+    slider.dispatchEvent(new Event('input'));
+
+    // 根據滑桿 id 決定更新哪個顯示文字
+    if (id === 'weeklyCalorieDelta') {
+        updateWeeklyCalorieDelta(newValue);
+    } else if (id === 'weeklyChange') {
+        updateWeeklyChange(newValue);
+    } else if (id === 'muscleRatio') {
+        updateMuscleRatio(newValue);
+    } else if (id === 'startWeight') {
+        updateStartWeight(newValue);
+    } else if (id === 'startBodyFat') {
+        updateStartBodyFat(newValue);
+    } else if (id === 'restInterval') {
+        updateRestInterval(newValue);
+    } else if (id === 'restDuration') {
+        updateRestDuration(newValue);
+    }
+}
+
+
+function updateWeeklyCalorieDelta(value) {
+    document.getElementById('weeklyCalorieDeltaDisplay').innerText = value + ' kcal';
+    document.getElementById('weeklyCalorieDelta').value = value;
+
+    let weight = value / 7700;
+    document.getElementById('weeklyChange').value = weight.toFixed(2);
+    document.getElementById('weeklyChangeDisplay').innerText = weight.toFixed(2) + ' kg';
+
+    saveStage();
+}
+
+function updateWeeklyChange(value) {
+    document.getElementById('weeklyChangeDisplay').innerText = parseFloat(value).toFixed(2) + ' kg';
+    document.getElementById('weeklyChange').value = value;
+
+    let kcal = Math.round(value * 7700);
+    document.getElementById('weeklyCalorieDelta').value = kcal;
+    document.getElementById('weeklyCalorieDeltaDisplay').innerText = kcal + ' kcal';
+
+    saveStage();
+}
+
+function updateMuscleRatio(value) {
+    document.getElementById('muscleRatioDisplay').innerText = value + ' %';
+    document.getElementById('muscleRatio').value = value;
+
+    saveStage();
+}
+
+function updateStartWeight(value) {
+    document.getElementById('startWeightDisplay').innerText = value + ' kg';
+    document.getElementById('startWeight').value = value;
+}
+
+function updateStartBodyFat(value) {
+    document.getElementById('startBodyFatDisplay').innerText = value + ' %';
+    document.getElementById('startBodyFat').value = value;
+}
+
+function updateRestInterval(value) {
+    document.getElementById('restIntervalDisplay').innerText = value + ' 週';
+    document.getElementById('restInterval').value = value;
+
+    saveStage();
+}
+
+function updateRestDuration(value) {
+    document.getElementById('restDurationDisplay').innerText = value + ' 週';
+    document.getElementById('restDuration').value = value;
+
+    saveStage();
+}
+
 
 function calculate() {
     const startWeight = parseFloat(document.getElementById('startWeight').value);
@@ -343,3 +594,12 @@ function drawCombinedChart(rows, stageChangePoints) {
         }
     });
 }
+
+window.onload = function() {
+    if (stages.length === 0) {
+        addStage(true);
+    }
+    recommendValues();
+    saveStage();
+    calculate();
+};
