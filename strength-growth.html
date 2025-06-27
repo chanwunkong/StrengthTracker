@@ -9,45 +9,20 @@
 
             <div class="slider-group">
                 <label>選擇性別:</label>
-                <div class="radio-group">
-                    <div class="radio-option">
-                        <input type="radio" id="male" name="gender" value="male" checked
-                            onchange="setDefaultWeight(); updateChart()">
-                        <label for="male">男性</label>
-                    </div>
-                    <div class="radio-option">
-                        <input type="radio" id="female" name="gender" value="female"
-                            onchange="setDefaultWeight(); updateChart()">
-                        <label for="female">女性</label>
-                    </div>
+                <div class="radio-button-group" id="genderRadioGroup">
+                    <button type="button" class="radio-button active" data-name="gender" data-value="male" onclick="selectGenderButton(this)">男性</button>
+                    <button type="button" class="radio-button" data-name="gender" data-value="female" onclick="selectGenderButton(this)">女性</button>
                 </div>
             </div>
 
             <div class="slider-group">
                 <label>選擇動作:</label>
-                <div class="radio-group" id="movementRadioGroup">
-                    <div class="radio-option">
-                        <input type="radio" id="press" name="movement" value="Press" checked onchange="updateChart()">
-                        <label for="press">肩推</label>
-                    </div>
-                    <div class="radio-option">
-                        <input type="radio" id="benchPress" name="movement" value="Bench Press"
-                            onchange="updateChart()">
-                        <label for="benchPress">臥推</label>
-                    </div>
-                    <div class="radio-option">
-                        <input type="radio" id="squat" name="movement" value="Squat" onchange="updateChart()">
-                        <label for="squat">深蹲</label>
-                    </div>
-                    <div class="radio-option">
-                        <input type="radio" id="deadlift" name="movement" value="Deadlift" onchange="updateChart()">
-                        <label for="deadlift">硬舉</label>
-                    </div>
-                    <div class="radio-option">
-                        <input type="radio" id="powerClean" name="movement" value="Power Clean"
-                            onchange="updateChart()">
-                        <label for="powerClean">抓舉</label>
-                    </div>
+                <div class="radio-button-group" id="movementRadioGroup">
+                    <button type="button" class="radio-button active" data-name="movement" data-value="Press" onclick="selectMovementButton(this)">肩推</button>
+                    <button type="button" class="radio-button" data-name="movement" data-value="Bench Press" onclick="selectMovementButton(this)">臥推</button>
+                    <button type="button" class="radio-button" data-name="movement" data-value="Squat" onclick="selectMovementButton(this)">深蹲</button>
+                    <button type="button" class="radio-button" data-name="movement" data-value="Deadlift" onclick="selectMovementButton(this)">硬舉</button>
+                    <button type="button" class="radio-button" data-name="movement" data-value="Power Clean" onclick="selectMovementButton(this)">抓舉</button>
                 </div>
             </div>
 

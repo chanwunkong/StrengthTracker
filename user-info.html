@@ -1,0 +1,23 @@
+
+<div class="user-info-section">
+    <h3>個人基本資料</h3>
+    <div class="user-info-group">
+        <label>性別:</label>
+        <div class="radio-button-group" id="genderRadioGroup">
+            <button type="button" class="radio-button active" data-name="gender" data-value="male" onclick="selectGenderButton(this)">男性</button>
+            <button type="button" class="radio-button" data-name="gender" data-value="female" onclick="selectGenderButton(this)">女性</button>
+        </div>
+    </div>
+    <div class="user-info-group">
+        <label for="userHeight">身高 (cm):</label>
+        <input type="number" id="userHeight" value="170" onchange="updateUserInfo()">
+    </div>
+    <div class="user-info-group">
+        <label for="userWeight">體重 (kg):</label>
+        <input type="number" id="userWeight" value="70" onchange="updateUserInfo()">
+    </div>
+    <div class="user-info-group">
+        <label for="userBodyFat">體脂率 (%):</label>
+        <input type="number" id="userBodyFat" value="20" onchange="updateUserInfo()">
+    </div>
+</div>

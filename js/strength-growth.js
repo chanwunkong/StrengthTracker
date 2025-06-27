@@ -3,6 +3,28 @@
 let language = 'zh';
 let unit = 'kg';
 
+function selectGenderButton(button) {
+    const buttons = document.querySelectorAll('.radio-button[data-name="gender"]');
+    buttons.forEach(btn => btn.classList.remove('active'));
+
+    button.classList.add('active');
+
+    setDefaultWeight();
+    updateChart();
+}
+
+
+function selectMovementButton(button) {
+    const buttons = document.querySelectorAll('.radio-button[data-name="movement"]');
+    buttons.forEach(btn => btn.classList.remove('active'));
+
+    button.classList.add('active');
+
+    updateChart();
+}
+
+
+
 function adjustSlider(sliderId, step) {
     const slider = document.getElementById(sliderId);
     let newValue = parseFloat(slider.value) + step;
@@ -48,7 +70,7 @@ function calculateOneRM(weight, reps) {
 }
 
 function setDefaultWeight() {
-    const gender = document.querySelector('input[name="gender"]:checked').value;
+    const gender = document.querySelector('.radio-button[data-name="gender"].active').getAttribute('data-value');
     const userWeight = document.getElementById('userWeight');
 
     if (gender === 'male') {
@@ -81,8 +103,8 @@ function updateChart() {
     language = document.getElementById('languageSelect').value;
     unit = document.getElementById('unitSelect').value;
 
-    const gender = document.querySelector('input[name="gender"]:checked').value;
-    const movement = document.querySelector('input[name="movement"]:checked').value;
+    const gender = document.querySelector('.radio-button[data-name="gender"].active').getAttribute('data-value');
+    const movement = document.querySelector('.radio-button[data-name="movement"].active').getAttribute('data-value');
     const params = movementParams[gender][movement];
 
     let weight = parseInt(document.getElementById('userWeight').value);
