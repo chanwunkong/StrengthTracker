@@ -5,116 +5,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Firebase Google 登入</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      display: flex;
-      height: 100vh;
-      background-color: #121212;
-      font-family: 'Arial', sans-serif;
-      color: #eeeeee;
-      overflow-x: hidden;
-    }
-
-    .sidebar {
-      background-color: #1e1e1e;
-      padding: 20px;
-      border-radius: 0 12px 12px 0;
-      width: 250px;
-      transition: transform 0.3s ease;
-      height: 100vh;
-      position: fixed;
-      top: 0;
-      left: 0;
-    }
-
-    .sidebar.collapsed {
-      transform: translateX(-100%);
-    }
-
-    .toggle-btn {
-      background-color: #555;
-      color: white;
-      padding: 10px;
-      border: none;
-      border-radius: 0 8px 8px 0;
-      cursor: pointer;
-      position: fixed;
-      top: 20px;
-      left: 0;
-      z-index: 1000;
-    }
-
-    .form-container {
-      background-color: #1e1e1e;
-      padding: 20px;
-      border-radius: 12px;
-      margin: 20px;
-      margin-left: 270px;
-      transition: margin-left 0.3s ease;
-      width: 100%;
-      max-width: 300px;
-    }
-
-    .sidebar.collapsed + .form-container {
-      margin-left: 20px;
-    }
-
-    h1, h2 {
-      font-size: 20px;
-      margin-bottom: 20px;
-      color: #ffffff;
-    }
-
-    button {
-      padding: 8px 16px;
-      margin: 8px 0;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 14px;
-      transition: background-color 0.3s;
-    }
-
-    #loginBtn {
-      background-color: #4285f4;
-      color: white;
-    }
-
-    #logoutBtn {
-      background-color: #e53935;
-      color: white;
-    }
-
-    .gender-buttons button {
-      margin-right: 10px;
-    }
-
-    .slider-container {
-      display: flex;
-      align-items: center;
-      margin-top: 10px;
-    }
-
-    .slider-container input[type="range"] {
-      flex-grow: 1;
-      margin: 0 10px;
-    }
-
-    label {
-      display: block;
-      margin-top: 10px;
-    }
-
-    p {
-      margin: 5px 0 15px 0;
-    }
-  </style>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
   <button id="toggleSidebar" class="toggle-btn">☰</button>
+
   <div id="sidebar" class="sidebar">
     <h1>Google 登入</h1>
     <button id="loginBtn">登入</button>
@@ -124,248 +21,64 @@
     </div>
   </div>
 
-  <div class="form-container">
-    <h2>使用者資訊</h2>
-    <form id="userForm">
-      <label>性別: <span id="genderDisplay">男</span></label>
-      <div class="gender-buttons">
-        <button type="button" class="gender-btn" data-gender="男" style="background-color: #4caf50;">男</button>
-        <button type="button" class="gender-btn" data-gender="女">女</button>
+  <div class="main-content">
+    <!-- 表單區塊 -->
+    <div class="form-container">
+      <h2>使用者資訊</h2>
+      <form id="userForm">
+        <label>性別: <span id="genderDisplay">男</span></label>
+        <div class="gender-buttons">
+          <button type="button" class="gender-btn active" data-gender="男">男</button>
+          <button type="button" class="gender-btn" data-gender="女">女</button>
+        </div>
+        <input type="hidden" id="gender" value="男" required>
+
+        <label>身高: <span id="heightValue">170</span> cm</label>
+        <div class="slider-container">
+          <button type="button" id="decreaseHeight">-</button>
+          <input type="range" id="height" min="100" max="250" step="1" value="170">
+          <button type="button" id="increaseHeight">+</button>
+        </div>
+
+        <label>體重: <span id="weightValue">70</span> kg</label>
+        <div class="slider-container">
+          <button type="button" id="decreaseWeight">-</button>
+          <input type="range" id="weight" min="30" max="200" step="1" value="70">
+          <button type="button" id="increaseWeight">+</button>
+        </div>
+
+        <label>體脂: <span id="bodyFatValue">20</span> %</label>
+        <div class="slider-container">
+          <button type="button" id="decreaseBodyFat">-</button>
+          <input type="range" id="bodyFat" min="5" max="50" step="1" value="20">
+          <button type="button" id="increaseBodyFat">+</button>
+        </div>
+
+        <button type="submit">儲存</button>
+      </form>
+    </div>
+
+    <!-- 互動圖表區塊 -->
+    <div class="chart-section">
+      <h2>互動圖表</h2>
+
+      <div class="chart-container">
+        <canvas id="chart1"></canvas>
       </div>
-      <input type="hidden" id="gender" value="男" required>
 
-      <label>身高: <span id="heightValue">170</span> cm</label>
-      <div class="slider-container">
-        <button type="button" id="decreaseHeight">-</button>
-        <input type="range" id="height" min="100" max="250" step="1" value="170">
-        <button type="button" id="increaseHeight">+</button>
+      <div class="chart-container">
+        <canvas id="chart2"></canvas>
       </div>
 
-      <label>體重: <span id="weightValue">70</span> kg</label>
-      <div class="slider-container">
-        <button type="button" id="decreaseWeight">-</button>
-        <input type="range" id="weight" min="30" max="200" step="1" value="70">
-        <button type="button" id="increaseWeight">+</button>
+      <div class="chart-container">
+        <canvas id="chart3"></canvas>
       </div>
-
-      <label>體脂: <span id="bodyFatValue">20</span> %</label>
-      <div class="slider-container">
-        <button type="button" id="decreaseBodyFat">-</button>
-        <input type="range" id="bodyFat" min="5" max="50" step="1" value="20">
-        <button type="button" id="increaseBodyFat">+</button>
-      </div>
-
-      <button type="submit">儲存</button>
-    </form>
-
+    </div>
   </div>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-  import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
-  import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyAI5lx2XT3ysBhTREBW637s_AlWC49LYJQ",
-    authDomain: "test-5dbba.firebaseapp.com",
-    projectId: "test-5dbba",
-    storageBucket: "test-5dbba.appspot.com",
-    messagingSenderId: "878665537417",
-    appId: "1:878665537417:web:0c5b32f6a01ff9df803358",
-    measurementId: "G-NFM5EEWYHP"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth();
-  const db = getFirestore();
-
-  const loginBtn = document.getElementById('loginBtn');
-  const logoutBtn = document.getElementById('logoutBtn');
-  const userInfo = document.getElementById('userInfo');
-  const welcomeMsg = document.getElementById('welcomeMsg');
-  const toggleSidebar = document.getElementById('toggleSidebar');
-  const sidebar = document.getElementById('sidebar');
-  const formContainer = document.querySelector('.form-container');
-
-  const genderButtons = document.querySelectorAll('.gender-btn');
-  const genderInput = document.getElementById('gender');
-  const genderDisplay = document.getElementById('genderDisplay');
-
-  const heightSlider = document.getElementById('height');
-  const heightValue = document.getElementById('heightValue');
-  const decreaseHeight = document.getElementById('decreaseHeight');
-  const increaseHeight = document.getElementById('increaseHeight');
-
-  const weightSlider = document.getElementById('weight');
-  const weightValue = document.getElementById('weightValue');
-  const decreaseWeight = document.getElementById('decreaseWeight');
-  const increaseWeight = document.getElementById('increaseWeight');
-
-  const bodyFatSlider = document.getElementById('bodyFat');
-  const bodyFatValue = document.getElementById('bodyFatValue');
-  const decreaseBodyFat = document.getElementById('decreaseBodyFat');
-  const increaseBodyFat = document.getElementById('increaseBodyFat');
-
-  const userForm = document.getElementById('userForm');
-
-  // 側邊欄切換
-  toggleSidebar.addEventListener('click', () => {
-    sidebar.classList.toggle('collapsed');
-    formContainer.style.marginLeft = sidebar.classList.contains('collapsed') ? '20px' : '270px';
-  });
-
-  // Google 登入
-  loginBtn.addEventListener('click', () => {
-    const provider = new GoogleAuthProvider();
-    signInWithPopup(auth, provider)
-      .then((result) => console.log('登入成功', result.user))
-      .catch((error) => console.error('登入錯誤：', error.message));
-  });
-
-  // Google 登出
-  logoutBtn.addEventListener('click', () => {
-    signOut(auth);
-  });
-
-  // 監聽登入狀態
-// 監聽登入狀態
-onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    loginBtn.style.display = 'none';
-    logoutBtn.style.display = 'inline-block';
-    userInfo.style.display = 'block';
-    welcomeMsg.textContent = `歡迎，${user.displayName}`;
-
-    try {
-      const userDocRef = doc(db, 'users', user.uid);
-      const userDoc = await getDoc(userDocRef);
-
-      if (userDoc.exists()) {
-        const data = userDoc.data();
-
-        // 更新性別
-        genderInput.value = data.gender;
-        genderDisplay.textContent = data.gender;
-
-        genderButtons.forEach(btn => {
-          if (btn.getAttribute('data-gender') === data.gender) {
-            btn.style.backgroundColor = '#4caf50';
-          } else {
-            btn.style.backgroundColor = '';
-          }
-        });
-
-        // 更新身高
-        heightSlider.value = data.height;
-        heightValue.textContent = data.height;
-
-        // 更新體重
-        weightSlider.value = data.weight;
-        weightValue.textContent = data.weight;
-
-        // 更新體脂
-        bodyFatSlider.value = data.bodyFat;
-        bodyFatValue.textContent = data.bodyFat;
-
-      } else {
-        console.log('沒有找到使用者資料，建立預設資料。');
-
-        // 預設資料
-        const defaultData = {
-          gender: '男',
-          height: 170,
-          weight: 70,
-          bodyFat: 20
-        };
-
-        await setDoc(userDocRef, defaultData);
-
-        // 畫面也要同步更新
-        genderInput.value = defaultData.gender;
-        genderDisplay.textContent = defaultData.gender;
-
-        genderButtons.forEach(btn => {
-          if (btn.getAttribute('data-gender') === defaultData.gender) {
-            btn.style.backgroundColor = '#4caf50';
-          } else {
-            btn.style.backgroundColor = '';
-          }
-        });
-
-        heightSlider.value = defaultData.height;
-        heightValue.textContent = defaultData.height;
-
-        weightSlider.value = defaultData.weight;
-        weightValue.textContent = defaultData.weight;
-
-        bodyFatSlider.value = defaultData.bodyFat;
-        bodyFatValue.textContent = defaultData.bodyFat;
-      }
-    } catch (error) {
-      console.error('讀取錯誤：', error);
-    }
-
-  } else {
-    loginBtn.style.display = 'inline-block';
-    logoutBtn.style.display = 'none';
-    userInfo.style.display = 'none';
-  }
-});
-
-  // 性別選擇
-  genderButtons.forEach(button => {
-    button.addEventListener('click', () => {
-      genderButtons.forEach(btn => btn.style.backgroundColor = '');
-      button.style.backgroundColor = '#4caf50';
-      genderInput.value = button.getAttribute('data-gender');
-      genderDisplay.textContent = button.getAttribute('data-gender');
-    });
-  });
-
-  // 滑桿設定
-  function setupSlider(slider, valueDisplay, decreaseBtn, increaseBtn, step = 1) {
-    slider.addEventListener('input', () => {
-      valueDisplay.textContent = slider.value;
-    });
-    decreaseBtn.addEventListener('click', () => {
-      slider.value = Math.max(parseInt(slider.min), parseInt(slider.value) - step);
-      valueDisplay.textContent = slider.value;
-    });
-    increaseBtn.addEventListener('click', () => {
-      slider.value = Math.min(parseInt(slider.max), parseInt(slider.value) + step);
-      valueDisplay.textContent = slider.value;
-    });
-  }
-
-  setupSlider(heightSlider, heightValue, decreaseHeight, increaseHeight);
-  setupSlider(weightSlider, weightValue, decreaseWeight, increaseWeight);
-  setupSlider(bodyFatSlider, bodyFatValue, decreaseBodyFat, increaseBodyFat);
-
-  // 表單儲存
-  userForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const user = auth.currentUser;
-    if (!user) {
-      alert('請先登入！');
-      return;
-    }
-
-    const userData = {
-      gender: genderInput.value,
-      height: parseInt(heightSlider.value),
-      weight: parseInt(weightSlider.value),
-      bodyFat: parseInt(bodyFatSlider.value)
-    };
-
-    try {
-      await setDoc(doc(db, 'users', user.uid), userData);
-      alert('資料已儲存！');
-    } catch (error) {
-      console.error('儲存錯誤：', error);
-      alert('儲存失敗！');
-    }
-  });
-</script>
+  <!-- 主程式，整合 Firebase、UI、表單 -->
+  <script type="module" src="js/main.js"></script>
 
 </body>
+
 </html>

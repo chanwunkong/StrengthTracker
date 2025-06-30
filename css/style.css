@@ -1,137 +1,185 @@
-/* 全域基本樣式 */
+/* style.css */
 body {
-    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    background-color: #121212;
+    font-family: 'Arial', sans-serif;
+    color: #eeeeee;
+    overflow-x: hidden;
+}
+
+.app-container {
+    display: flex;
+    height: 100vh;
+}
+
+.sidebar {
+    background-color: #1e1e1e;
     padding: 20px;
-    max-width: 1200px;
-    margin: auto;
-    background-color: #f5f5f5;
+    border-radius: 0 12px 12px 0;
+    width: 250px;
+    transition: transform 0.3s ease;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
 }
 
-/* 外層容器，兩個區塊共用 */
-.strength-container {
-    display: flex;
-    align-items: stretch;
-    gap: 20px;
-    margin-bottom: 40px;
+.sidebar.collapsed {
+    transform: translateX(-100%);
 }
 
-/* 左側控制區 */
-.left-panel {
-    flex: 0 0 350px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-/* 右側圖表區 */
-.right-panel {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow-x: auto;
-}
-
-/* 區塊樣式 */
-.section {
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    padding: 15px;
-    background-color: #f9f9f9;
-}
-
-/* 圖表容器 */
-.chart-container {
-    flex: 1;
-    width: 100%;
-    max-width: 100%;
+.toggle-btn {
+    background-color: #555;
+    color: white;
     padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    background-color: #fff;
+    border: none;
+    border-radius: 0 8px 8px 0;
+    cursor: pointer;
+    position: fixed;
+    top: 20px;
+    left: 0;
+    z-index: 1000;
 }
 
-#chart,
-#musclePotentialChart {
-    width: 100% !important;
-    height: 100% !important;
-    min-height: 400px;
-}
-
-/* 滑桿區域 */
-.slider-group {
-    margin-bottom: 15px;
-}
-
-.slider-label {
+.main-content {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 5px;
-    font-weight: bold;
-}
-
-.slider-control {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-
-input[type="range"] {
+    flex-direction: row;
     flex: 1;
-    cursor: pointer;
+    transition: margin-left 0.3s ease;
+    padding: 20px;
+    margin-left: 20px;
 }
 
+.sidebar.collapsed+.main-content {
+    margin-left: 20px;
+}
+
+h1,
+h2 {
+    font-size: 20px;
+    margin-bottom: 20px;
+    color: #ffffff;
+}
+
+/* 全站通用按鈕（滑桿加減按鈕、儲存按鈕） 預設透明背景，白色邊框 */
 button {
-    min-width: 30px;  /* 不設固定寬度，讓按鈕寬度根據文字自動擴張 */
-    height: 35px;      /* 建議稍微高一點，讓文字更舒適 */
-    padding: 5px 10px; /* 內距，保持按鈕的空間感 */
-    font-size: 16px;
+    padding: 8px 16px;
+    margin: 8px 0;
+    border: 1px solid white;
+    border-radius: 8px;
     cursor: pointer;
-    background-color: #f0f0f0;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    transition: background-color 0.2s;
-    white-space: nowrap; /* 避免文字換行 */
+    font-size: 14px;
+    transition: background-color 0.3s, color 0.3s, border 0.3s;
+    background-color: transparent;
+    color: white;
 }
 
 button:hover {
-    background-color: #ddd;
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* 單選選項 */
-.radio-group {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px 20px;
+/* 特殊按鈕統一樣式 */
+button.special-btn {
+    border: none;
+    color: white;
 }
 
-.radio-option {
+/* Google 登入按鈕 */
+#loginBtn {
+    background-color: #4285f4;
+}
+
+#loginBtn:hover {
+    background-color: #357ae8;
+}
+
+/* Google 登出按鈕 */
+#logoutBtn {
+    background-color: #e53935;
+}
+
+#logoutBtn:hover {
+    background-color: #d32f2f;
+}
+
+.gender-buttons button {
+    background-color: #555;
+    color: white;
+    margin-right: 10px;
+    border: none;
+}
+
+.gender-buttons button.active {
+    background-color: #4caf50 !important;
+}
+
+.form-container {
+    background-color: #1e1e1e;
+    padding: 20px;
+    border-radius: 12px;
+    width: 300px;
+    margin-right: 20px;
+}
+
+.slider-container {
     display: flex;
     align-items: center;
-    white-space: nowrap;
+    margin-top: 10px;
 }
 
-.radio-option input {
-    margin-right: 5px;
+.slider-container input[type="range"] {
+    flex-grow: 1;
+    margin: 0 10px;
 }
 
-/* 響應式設計 */
+label {
+    display: block;
+    margin-top: 10px;
+}
+
+p {
+    margin: 5px 0 15px 0;
+}
+
+.chart-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.chart-container {
+    margin-bottom: 40px;
+    background-color: #1e1e1e;
+    padding: 20px;
+    border-radius: 12px;
+    min-height: 200px;
+}
+
+.chart-container canvas {
+    width: 100% !important;
+    height: auto !important;
+}
+
+/* 響應式：手機版支援 */
 @media (max-width: 768px) {
-    .strength-container {
+    .main-content {
         flex-direction: column;
+        margin-left: 0;
     }
 
-    .left-panel {
-        flex: 1;
+    .form-container {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 20px;
     }
 
-    .right-panel {
-        flex: 1;
+    .chart-section {
+        width: 100%;
     }
-}
 
-button.active {
-    background-color: #4CAF50; /* 綠色背景 */
-    color: white;
-    font-weight: bold;
+    .sidebar {
+        width: 200px;
+    }
 }
