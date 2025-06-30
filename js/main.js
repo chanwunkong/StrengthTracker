@@ -86,6 +86,13 @@ function updateUserInfo(data) {
     const bodyFatSlider = document.getElementById('bodyFat');
     const bodyFatValue = document.getElementById('bodyFatValue');
 
+    const wristSlider = document.getElementById('wrist');
+    const wristValue = document.getElementById('wristValue');
+
+    const ankleSlider = document.getElementById('ankle');
+    const ankleValue = document.getElementById('ankleValue');
+
+    // 性別
     genderInput.value = data.gender;
     genderDisplay.textContent = data.gender;
 
@@ -96,12 +103,34 @@ function updateUserInfo(data) {
         }
     });
 
+    // 身高
     heightSlider.value = data.height;
-    heightValue.textContent = data.height;
+    heightValue.textContent = parseFloat(data.height).toFixed(1);
 
+    // 體重
     weightSlider.value = data.weight;
-    weightValue.textContent = data.weight;
+    weightValue.textContent = parseFloat(data.weight).toFixed(1);
 
+    // 體脂
     bodyFatSlider.value = data.bodyFat;
-    bodyFatValue.textContent = data.bodyFat;
+    bodyFatValue.textContent = parseFloat(data.bodyFat).toFixed(1);
+
+    // 手腕圍
+    wristSlider.value = data.wrist;
+    wristValue.textContent = parseFloat(data.wrist).toFixed(1);
+
+    // 踝圍
+    ankleSlider.value = data.ankle;
+    ankleValue.textContent = parseFloat(data.ankle).toFixed(1);
+
+    // 同步圖表
+    if (window.syncSliderValues && window.updateFFMIChart) {
+        window.syncSliderValues();
+        window.updateFFMIChart();
+    }
+    if (window.updateMuscleLimitChart) {
+        window.updateMuscleLimitChart();
+    }
 }
+
+

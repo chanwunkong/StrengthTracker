@@ -1,4 +1,3 @@
-// ui.js
 const toggleSidebar = document.getElementById('toggleSidebar');
 const sidebar = document.getElementById('sidebar');
 const formContainer = document.querySelector('.form-container');
@@ -22,6 +21,16 @@ const bodyFatValue = document.getElementById('bodyFatValue');
 const decreaseBodyFat = document.getElementById('decreaseBodyFat');
 const increaseBodyFat = document.getElementById('increaseBodyFat');
 
+const wristSlider = document.getElementById('wrist');
+const wristValue = document.getElementById('wristValue');
+const decreaseWrist = document.getElementById('decreaseWrist');
+const increaseWrist = document.getElementById('increaseWrist');
+
+const ankleSlider = document.getElementById('ankle');
+const ankleValue = document.getElementById('ankleValue');
+const decreaseAnkle = document.getElementById('decreaseAnkle');
+const increaseAnkle = document.getElementById('increaseAnkle');
+
 export function setupUI() {
     // 側邊欄切換
     toggleSidebar.addEventListener('click', () => {
@@ -40,21 +49,35 @@ export function setupUI() {
     });
 
     // 滑桿加減設定
-    setupSlider(heightSlider, heightValue, decreaseHeight, increaseHeight);
-    setupSlider(weightSlider, weightValue, decreaseWeight, increaseWeight);
-    setupSlider(bodyFatSlider, bodyFatValue, decreaseBodyFat, increaseBodyFat);
+    setupSlider(heightSlider, heightValue, decreaseHeight, increaseHeight, 0.1);
+    setupSlider(weightSlider, weightValue, decreaseWeight, increaseWeight, 0.1);
+    setupSlider(bodyFatSlider, bodyFatValue, decreaseBodyFat, increaseBodyFat, 0.1);
+    setupSlider(wristSlider, wristValue, decreaseWrist, increaseWrist, 0.1);
+    setupSlider(ankleSlider, ankleValue, decreaseAnkle, increaseAnkle, 0.1);
 }
 
-function setupSlider(slider, valueDisplay, decreaseBtn, increaseBtn, step = 1) {
+// ✅ 觸發所有圖表更新
+function triggerAllCharts() {
+    if (window.syncSliderValues) window.syncSliderValues();
+    if (window.updateFFMIChart) window.updateFFMIChart();
+    if (window.updateMuscleLimitChart) window.updateMuscleLimitChart();
+}
+
+function setupSlider(slider, valueDisplay, decreaseBtn, increaseBtn, step = 0.1) {
     slider.addEventListener('input', () => {
-        valueDisplay.textContent = slider.value;
+        valueDisplay.textContent = parseFloat(slider.value).toFixed(1);
+        triggerAllCharts();
     });
+
     decreaseBtn.addEventListener('click', () => {
-        slider.value = Math.max(parseInt(slider.min), parseInt(slider.value) - step);
-        valueDisplay.textContent = slider.value;
+        slider.value = Math.max(parseFloat(slider.min), parseFloat(slider.value) - step);
+        valueDisplay.textContent = parseFloat(slider.value).toFixed(1);
+        triggerAllCharts();
     });
+
     increaseBtn.addEventListener('click', () => {
-        slider.value = Math.min(parseInt(slider.max), parseInt(slider.value) + step);
-        valueDisplay.textContent = slider.value;
+        slider.value = Math.min(parseFloat(slider.max), parseFloat(slider.value) + step);
+        valueDisplay.textContent = parseFloat(slider.value).toFixed(1);
+        triggerAllCharts();
     });
 }

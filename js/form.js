@@ -1,4 +1,3 @@
-// form.js
 import { db, doc, setDoc } from './firebase.js';
 
 const userForm = document.getElementById('userForm');
@@ -6,6 +5,10 @@ const genderInput = document.getElementById('gender');
 const heightSlider = document.getElementById('height');
 const weightSlider = document.getElementById('weight');
 const bodyFatSlider = document.getElementById('bodyFat');
+
+// 👉 新增手腕圍和踝圍滑桿
+const wristSlider = document.getElementById('wrist');
+const ankleSlider = document.getElementById('ankle');
 
 export function setupForm(auth) {
     userForm.addEventListener('submit', async (e) => {
@@ -18,9 +21,11 @@ export function setupForm(auth) {
 
         const userData = {
             gender: genderInput.value,
-            height: parseInt(heightSlider.value),
-            weight: parseInt(weightSlider.value),
-            bodyFat: parseInt(bodyFatSlider.value)
+            height: parseFloat(heightSlider.value),
+            weight: parseFloat(weightSlider.value),
+            bodyFat: parseFloat(bodyFatSlider.value),
+            wrist: parseFloat(wristSlider.value),
+            ankle: parseFloat(ankleSlider.value)
         };
 
         try {
