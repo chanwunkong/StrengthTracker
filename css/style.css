@@ -183,3 +183,15 @@ p {
         width: 200px;
     }
 }
+
+.form-container {
+    background-color: #1e1e1e;
+    padding: 20px;
+    border-radius: 12px;
+    width: 300px;
+    margin-right: 20px;
+    position: sticky;
+    top: 20px;
+    align-self: flex-start;
+    /* 確保 sticky 正常運作 */
+}
