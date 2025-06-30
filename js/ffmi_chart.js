@@ -40,7 +40,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentFFMI = parseFloat(calculateFFMI(weight, height, currentBodyFat));
 
         const data = {
-            labels: bodyFatRates,
             datasets: [
                 {
                     label: 'FFMI 曲線',
@@ -88,12 +87,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 },
                 scales: {
-                    x: { title: { display: true, text: '體脂率 (%)' } },
-                    y: { title: { display: true, text: 'FFMI' }, beginAtZero: false }
+                    x: {
+                        type: 'linear', // 這裡要加
+                        title: { display: true, text: '體脂率 (%)' },
+                        min: 5,
+                        max: 50
+                    },
+                    y: {
+                        title: { display: true, text: 'FFMI' },
+                        beginAtZero: false
+                    }
                 }
             },
             plugins: [ChartDataLabels]
         };
+
 
         if (ffmiChart) {
             ffmiChart.destroy();

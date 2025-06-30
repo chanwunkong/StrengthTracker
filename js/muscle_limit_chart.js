@@ -59,7 +59,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const progressPercent = (currentLeanMass / leanMass95AtCurrentFat) * 100;
 
         const data = {
-            labels: bodyFatRates,
             datasets: [
                 {
                     label: '極限體重',
@@ -143,9 +142,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 },
                 scales: {
-                    x: { title: { display: true, text: '體脂率 (%)' } },
-                    y: { min: 40, max: 150, title: { display: true, text: '體重 (kg)' } }
+                    x: {
+                        type: 'linear',  // 這裡一定要加
+                        title: { display: true, text: '體脂率 (%)' },
+                        min: 5,
+                        max: 50
+                    },
+                    y: {
+                        min: 40,
+                        max: 150,
+                        title: { display: true, text: '體重 (kg)' }
+                    }
                 }
+
             },
             plugins: [ChartDataLabels]
         };
