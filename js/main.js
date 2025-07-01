@@ -124,9 +124,10 @@ function updateUserInfo(data) {
     ankleValue.textContent = parseFloat(data.ankle).toFixed(1);
 
     // 同步圖表
-    if (window.syncSliderValues && window.updateFFMIChart) {
+    if (window.syncSliderValues //&& window.updateFFMIChart// 
+    ) {
         window.syncSliderValues();
-        window.updateFFMIChart();
+        // window.updateFFMIChart();
     }
     if (window.updateMuscleLimitChart) {
         window.updateMuscleLimitChart();

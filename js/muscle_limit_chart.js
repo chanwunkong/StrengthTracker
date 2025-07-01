@@ -25,6 +25,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const maxLeanMass95 = [];
         const totalWeights = [];
         const totalWeights95 = [];
+        const ffmiData = [];
+        const ffmi95Data = [];
 
         bodyFatRates.forEach(bf => {
             const leanMass = calculateLeanMass(height, wrist, ankle, bf);
@@ -32,18 +34,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const totalWeight = leanMass / (1 - bf / 100);
             const totalWeight95 = leanMass95 / (1 - bf / 100);
+            const ffmi = leanMass / Math.pow(height / 100, 2);
+            const ffmi95 = leanMass95 / Math.pow(height / 100, 2);
 
             maxLeanMass.push({ x: bf, y: parseFloat(leanMass.toFixed(1)) });
             maxLeanMass95.push({ x: bf, y: parseFloat(leanMass95.toFixed(1)) });
             totalWeights.push({ x: bf, y: parseFloat(totalWeight.toFixed(1)) });
             totalWeights95.push({ x: bf, y: parseFloat(totalWeight95.toFixed(1)) });
+            ffmiData.push({ x: bf, y: parseFloat(ffmi.toFixed(1)) });
+            ffmi95Data.push({ x: bf, y: parseFloat(ffmi95.toFixed(1)) });
         });
 
-        return { bodyFatRates, maxLeanMass, maxLeanMass95, totalWeights, totalWeights95 };
+        return { bodyFatRates, maxLeanMass, maxLeanMass95, totalWeights, totalWeights95, ffmiData, ffmi95Data };
     }
 
     function updateMuscleLimitChart() {
-        const { bodyFatRates, maxLeanMass, maxLeanMass95, totalWeights, totalWeights95 } = generateMuscleChartData();
+        const { bodyFatRates, maxLeanMass, maxLeanMass95, totalWeights, totalWeights95, ffmiData, ffmi95Data } = generateMuscleChartData();
 
         const currentBodyFat = parseFloat(bodyFatInput.value);
         const currentWeight = parseFloat(weightInput.value);
@@ -89,6 +95,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     tension: 0.1
                 },
                 {
+                    label: '極限 FFMI',
+                    data: ffmiData,
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    fill: false,
+                    tension: 0.1,
+                },
+                {
+                    label: '95% 極限 FFMI',
+                    data: ffmi95Data,
+                    borderColor: 'rgba(255, 206, 86, 1)',
+                    fill: false,
+                },
+                {
                     label: '目前體重',
                     data: [{ x: currentBodyFat, y: currentWeight }],
                     backgroundColor: 'red',
@@ -120,8 +139,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         text: `自然肌肉極限估算圖 (目前淨體重達成率: ${progressPercent.toFixed(1)}%)`
                     },
                     tooltip: {
-                        mode: 'nearest',
-                        intersect: false
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            title: (tooltipItems) => {
+                                const bodyFat = tooltipItems[0].label; // 取第一筆資料的 X 軸
+                                return `體脂率: ${bodyFat}%`;
+                            }
+                        }
                     },
                     legend: {
                         labels: { filter: (item) => true }
@@ -129,16 +154,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     datalabels: {
                         align: 'top',
                         formatter: (value, context) => {
-                            if (context.datasetIndex === 4) { // 目前體重資料點
+                            if (context.datasetIndex === 6) { // 目前體重資料點
                                 return `${value.y}kg`;
-                            } else if (context.datasetIndex === 5) { // 目前淨體重資料點
-                                const percent = context.chart.data.datasets[5].customPercent;
+                            } else if (context.datasetIndex === 7) { // 目前淨體重資料點
+                                const percent = context.chart.data.datasets[7].customPercent;
                                 return `${value.y}kg\n(${percent}%)`;
                             }
                             return '';
                         },
-                        font: { weight: 'bold' },
-                        color: (context) => context.datasetIndex === 4 ? 'red' : (context.datasetIndex === 5 ? 'blue' : 'black')
+                        color: (context) => context.datasetIndex === 6 ? 'red' : (context.datasetIndex === 7 ? 'blue' : 'black')
                     }
                 },
                 scales: {
@@ -149,7 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         max: 50
                     },
                     y: {
-                        min: 40,
+                        min: 0,
                         max: 150,
                         title: { display: true, text: '體重 (kg)' }
                     }
