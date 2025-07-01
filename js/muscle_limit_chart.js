@@ -72,28 +72,30 @@ document.addEventListener('DOMContentLoaded', () => {
                     data: totalWeights,
                     borderColor: 'rgba(75, 192, 192, 1)',
                     fill: false,
-                    tension: 0.1
+                    tension: 0.1,
+                    hidden: true,
                 },
                 {
                     label: '95% 極限體重',
                     data: totalWeights95,
                     borderColor: 'rgba(255, 159, 64, 1)',
                     fill: false,
-                    tension: 0.1
+                    tension: 0.1,
                 },
                 {
                     label: '極限淨體重',
                     data: maxLeanMass,
                     borderColor: 'rgba(153, 102, 255, 1)',
                     fill: false,
-                    tension: 0.1
+                    tension: 0.1,
+                    hidden: true,
                 },
                 {
                     label: '95% 極限淨體重',
                     data: maxLeanMass95,
                     borderColor: 'rgba(255, 99, 132, 1)',
                     fill: false,
-                    tension: 0.1
+                    tension: 0.1,
                 },
                 {
                     label: '極限 FFMI',
@@ -101,6 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     borderColor: 'rgba(54, 162, 235, 1)',
                     fill: false,
                     tension: 0.1,
+                    hidden: true,
                 },
                 {
                     label: '95% 極限 FFMI',
@@ -114,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     backgroundColor: 'red',
                     pointRadius: 6,
                     pointHoverRadius: 8,
-                    showLine: false
+                    showLine: false,
                 },
                 {
                     label: '目前淨體重',
@@ -123,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     pointRadius: 6,
                     pointHoverRadius: 8,
                     showLine: false,
-                    customPercent: progressPercent.toFixed(1) // 👉 額外傳遞百分比
+                    customPercent: progressPercent.toFixed(1), // 👉 額外傳遞百分比
                 },
                 {
                     label: '目前 FFMI',
@@ -131,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     backgroundColor: 'red',
                     pointRadius: 6,
                     pointHoverRadius: 8,
-                    showLine: false
+                    showLine: false,
                 },
 
             ]
