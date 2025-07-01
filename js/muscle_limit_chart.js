@@ -222,3 +222,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.updateMuscleLimitChart = updateMuscleLimitChart;
 });
+

@@ -27,9 +27,11 @@
       <h2>使用者資訊</h2>
       <form id="userForm">
         <label>性別: <span id="genderDisplay">男</span></label>
-        <div class="gender-buttons">
-          <button type="button" class="gender-btn active" data-gender="男">男</button>
-          <button type="button" class="gender-btn" data-gender="女">女</button>
+        <div class="radio-button-group" id="genderGroup">
+          <button type="button" class="radio-button active" data-name="gender" data-value="男"
+            onclick="selectRadioButton(this)">男</button>
+          <button type="button" class="radio-button" data-name="gender" data-value="女"
+            onclick="selectRadioButton(this)">女</button>
         </div>
         <input type="hidden" id="gender" value="男" required>
 
@@ -81,15 +83,93 @@
     <div class="chart-section">
       <h2>圖表</h2>
 
-      <!-- <div class="chart-container">
-        <canvas id="ffmiChart"></canvas>
-      </div> -->
-
       <div class="chart-container">
         <canvas id="muscleLimitChart"></canvas>
       </div>
 
       <div class="chart-container">
+        <!-- 階段管理區 -->
+        <div class="phase-manager">
+          <h3>階段管理</h3>
+          <button id="addPhaseBtn">新增階段</button>
+          <div id="stageButtons"></div>
+        </div>
+
+        <div class="stage-editor">
+          <h3>階段編輯區</h3>
+
+          <!-- 階段名稱 -->
+          <label>階段名稱: <input type="text" id="stageName"></label><br><br>
+
+          <!-- 目標類型 -->
+          <label>目標類型:</label>
+          <div class="radio-button-group" id="goalTypeGroup">
+            <button type="button" class="radio-button" data-name="goalType" data-value="bulking"
+              onclick="selectRadioButton(this)">增肌期</button>
+            <button type="button" class="radio-button" data-name="goalType" data-value="cutting"
+              onclick="selectRadioButton(this)">減脂期</button>
+            <button type="button" class="radio-button" data-name="goalType" data-value="maintenance"
+              onclick="selectRadioButton(this)">休息期</button>
+          </div><br><br>
+
+          <!-- 每週熱量變化 -->
+          <label>每週熱量變化: <span id="weeklyCalorieDeltaDisplay">0</span> kcal</label>
+          <div class="slider-container">
+            <button type="button" onclick="adjustStageSlider('weeklyCalorieDelta', -100)">-</button>
+            <input type="range" id="weeklyCalorieDelta" min="-10000" max="5000" step="10" value="0"
+              oninput="updateStageSliderDisplay('weeklyCalorieDelta', this.value)">
+            <button type="button" onclick="adjustStageSlider('weeklyCalorieDelta', 100)">+</button>
+          </div><br>
+
+          <!-- 每週體重變化 -->
+          <label>每週體重變化: <span id="weeklyChangeDisplay">0</span> kg</label>
+          <div class="slider-container">
+            <button type="button" onclick="adjustStageSlider('weeklyChange', -0.1)">-</button>
+            <input type="range" id="weeklyChange" min="-1.5" max="1.5" step="0.01" value="0"
+              oninput="updateStageSliderDisplay('weeklyChange', this.value)">
+            <button type="button" onclick="adjustStageSlider('weeklyChange', 0.1)">+</button>
+          </div><br>
+
+          <!-- 肌肉變化比例 -->
+          <label>肌肉變化比例: <span id="muscleRatioDisplay">50</span> %</label>
+          <div class="slider-container">
+            <button type="button" onclick="adjustStageSlider('muscleRatio', -1)">-</button>
+            <input type="range" id="muscleRatio" min="0" max="100" step="1" value="50"
+              oninput="updateStageSliderDisplay('muscleRatio', this.value)">
+            <button type="button" onclick="adjustStageSlider('muscleRatio', 1)">+</button>
+          </div><br>
+
+          <!-- 結束條件 -->
+          <label>結束條件:</label>
+          <div class="radio-button-group" id="conditionLogicGroup">
+            <button type="button" class="radio-button" data-value="OR" onclick="selectLogicButton(this)">任一條件</button>
+            <button type="button" class="radio-button" data-value="AND" onclick="selectLogicButton(this)">全部條件</button>
+          </div><br><br>
+
+          <div id="conditionList"></div>
+          <button onclick="addCondition()">+ 新增條件</button><br><br>
+
+          <!-- 休息期 -->
+          <label>每幾週進入休息期: <span id="restIntervalDisplay">12</span> 週</label>
+          <div class="slider-container">
+            <button type="button" onclick="adjustStageSlider('restInterval', -1)">-</button>
+            <input type="range" id="restInterval" min="0" max="20" step="1" value="12"
+              oninput="updateStageSliderDisplay('restInterval', this.value)">
+            <button type="button" onclick="adjustStageSlider('restInterval', 1)">+</button>
+          </div><br>
+
+          <label>休息期持續週數: <span id="restDurationDisplay">2</span> 週</label>
+          <div class="slider-container">
+            <button type="button" onclick="adjustStageSlider('restDuration', -1)">-</button>
+            <input type="range" id="restDuration" min="0" max="8" step="1" value="2"
+              oninput="updateStageSliderDisplay('restDuration', this.value)">
+            <button type="button" onclick="adjustStageSlider('restDuration', 1)">+</button>
+          </div><br>
+
+          <button onclick="saveStage()">儲存階段</button>
+        </div>
+
+        <!-- 圖表 -->
         <canvas id="bodyplannerChart"></canvas>
       </div>
     </div>

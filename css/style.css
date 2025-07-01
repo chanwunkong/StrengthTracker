@@ -80,9 +80,21 @@ button:hover {
     background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* 特殊按鈕統一樣式 */
-button.special-btn {
+/* 單選按鈕通用樣式 (全站統一) */
+.radio-button {
+    background-color: #555;
+    color: white;
+    margin-right: 10px;
     border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s, color 0.3s, border 0.3s;
+}
+
+.radio-button.active {
+    background-color: #4caf50 !important;
     color: white;
 }
 
@@ -102,17 +114,6 @@ button.special-btn {
 
 #logoutBtn:hover {
     background-color: #d32f2f;
-}
-
-.gender-buttons button {
-    background-color: #555;
-    color: white;
-    margin-right: 10px;
-    border: none;
-}
-
-.gender-buttons button.active {
-    background-color: #4caf50 !important;
 }
 
 .form-container {
