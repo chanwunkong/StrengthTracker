@@ -195,7 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     },
                     y: {
                         min: 0,
-                        max: 150,
+                        // max: 150,
                         title: { display: true, text: '體重 (kg)' }
                     }
                 }
