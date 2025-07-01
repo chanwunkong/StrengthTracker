@@ -54,6 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentBodyFat = parseFloat(bodyFatInput.value);
         const currentWeight = parseFloat(weightInput.value);
         const currentLeanMass = currentWeight * (1 - currentBodyFat / 100);
+        const currentFFMI = currentLeanMass / Math.pow(parseFloat(heightInput.value) / 100, 2);
 
         const leanMass95AtCurrentFat = calculateLeanMass(
             parseFloat(heightInput.value),
@@ -118,12 +119,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 {
                     label: '目前淨體重',
                     data: [{ x: currentBodyFat, y: parseFloat(currentLeanMass.toFixed(1)) }],
-                    backgroundColor: 'blue',
+                    backgroundColor: 'red',
                     pointRadius: 6,
                     pointHoverRadius: 8,
                     showLine: false,
                     customPercent: progressPercent.toFixed(1) // 👉 額外傳遞百分比
-                }
+                },
+                {
+                    label: '目前 FFMI',
+                    data: [{ x: currentBodyFat, y: parseFloat(currentFFMI.toFixed(1)) }],
+                    backgroundColor: 'red',
+                    pointRadius: 6,
+                    pointHoverRadius: 8,
+                    showLine: false
+                },
+
             ]
         };
 
@@ -159,10 +169,18 @@ document.addEventListener('DOMContentLoaded', () => {
                             } else if (context.datasetIndex === 7) { // 目前淨體重資料點
                                 const percent = context.chart.data.datasets[7].customPercent;
                                 return `${value.y}kg\n(${percent}%)`;
+                            } else if (context.datasetIndex === 8) { // 目前 FFMI 資料點
+                                return `FFMI: ${value.y}`;
                             }
                             return '';
                         },
-                        color: (context) => context.datasetIndex === 6 ? 'red' : (context.datasetIndex === 7 ? 'blue' : 'black')
+                        color: (context) => {
+                            if (context.datasetIndex === 6) return 'red';
+                            if (context.datasetIndex === 7) return 'red';
+                            if (context.datasetIndex === 8) return 'red';
+                            return 'black';
+                        }
+
                     }
                 },
                 scales: {
