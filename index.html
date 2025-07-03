@@ -12,7 +12,7 @@
 <body>
   <button id="toggleSidebar" class="toggle-btn">☰</button>
 
-<div id="sidebar" class="sidebar collapsed">
+  <div id="sidebar" class="sidebar collapsed">
     <h1>Google 登入</h1>
     <button id="loginBtn">登入</button>
     <button id="logoutBtn" style="display:none;">登出</button>
@@ -112,17 +112,17 @@
               onclick="selectRadioButton(this)">休息期</button>
           </div><br><br>
 
-<!-- 每週體重變化 -->
-<label>每週體重變化: <span id="weeklyChangeDisplay">0</span> kg</label>
-<div class="slider-container">
-  <button type="button" onclick="adjustStageSlider('weeklyChange', -0.1)">-</button>
-  <input type="range" id="weeklyChange" min="-1.5" max="1.5" step="0.01" value="0"
-    oninput="updateStageSliderDisplay('weeklyChange', this.value)">
-  <button type="button" onclick="adjustStageSlider('weeklyChange', 0.1)">+</button>
-</div><br>
+          <!-- 每週體重變化 -->
+          <label>每週體重變化: <span id="weeklyChangeDisplay">0</span> kg</label>
+          <div class="slider-container">
+            <button type="button" onclick="adjustStageSlider('weeklyChange', -0.1)">-</button>
+            <input type="range" id="weeklyChange" min="-1.5" max="1.5" step="0.01" value="0"
+              oninput="updateStageSliderDisplay('weeklyChange', this.value)">
+            <button type="button" onclick="adjustStageSlider('weeklyChange', 0.1)">+</button>
+          </div><br>
 
-<!-- 每週熱量變化（自動計算） -->
-<label>每週熱量變化 (參考): <span id="weeklyCalorieDeltaDisplay">0</span> kcal</label>
+          <!-- 每週熱量變化（自動計算） -->
+          <label>每週熱量變化 (參考): <span id="weeklyCalorieDeltaDisplay">0</span> kcal</label>
 
           <!-- 肌肉變化比例 -->
           <label>肌肉變化比例: <span id="muscleRatioDisplay">50</span> %</label>

@@ -1,3 +1,5 @@
+
+
 let heightInput, weightInput, bodyFatInput, wristInput, ankleInput;
 let bodyplannerChart;
 
@@ -95,6 +97,23 @@ function initializeBodyplannerChart() {
                     fill: false,
                     tension: 0.1,
                     yAxisID: 'y2'
+                },
+                {
+                    label: '淨體重 (kg)',
+                    data: [],
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    fill: false,
+                    tension: 0.1
+                },
+                {
+                    label: '淨體重比例 (%)',
+                    data: [],
+                    borderColor: 'rgba(153, 102, 255, 1)',
+                    backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                    fill: false,
+                    tension: 0.1,
+                    yAxisID: 'y2'
                 }
             ]
         },
@@ -129,13 +148,14 @@ function initializeBodyplannerChart() {
                 },
                 y2: {
                     position: 'right',
-                    title: { display: true, text: '體脂率 (%)' },
+                    title: { display: true, text: '體脂率 (%) / 淨體重比例 (%)' },
                     grid: { drawOnChartArea: false }
                 }
             }
         }
     });
 }
+
 
 function renderStageButtons() {
     const container = document.getElementById('stageButtons');
@@ -265,8 +285,12 @@ function updateBodyplannerChart(simulationData) {
     bodyplannerChart.data.labels = simulationData.labels;
     bodyplannerChart.data.datasets[0].data = simulationData.weights;
     bodyplannerChart.data.datasets[1].data = simulationData.bodyFats;
+    bodyplannerChart.data.datasets[2].data = simulationData.leanMasses;
+    bodyplannerChart.data.datasets[3].data = simulationData.leanMassPercents;
+
     bodyplannerChart.update();
 }
+
 
 function simulateBodyPlanner() {
     let currentWeight = parseFloat(weightInput.value);
@@ -275,10 +299,13 @@ function simulateBodyPlanner() {
     const labels = [0];
     const weights = [parseFloat(currentWeight.toFixed(2))];
     const bodyFats = [parseFloat(currentBodyFat.toFixed(2))];
+    const leanMasses = [parseFloat((currentWeight * (1 - currentBodyFat / 100)).toFixed(2))];
+    const leanMassPercents = [parseFloat((100 - currentBodyFat).toFixed(2))];
+
     let week = 0;
 
     if (stages.length === 0) {
-        updateBodyplannerChart({ labels, weights, bodyFats });
+        updateBodyplannerChart({ labels, weights, bodyFats, leanMasses, leanMassPercents });
         return;
     }
 
@@ -288,6 +315,10 @@ function simulateBodyPlanner() {
             labels.push(week);
             weights.push(parseFloat(currentWeight.toFixed(2)));
             bodyFats.push(parseFloat(currentBodyFat.toFixed(2)));
+
+            let leanMass = currentWeight * (1 - currentBodyFat / 100);
+            leanMasses.push(parseFloat(leanMass.toFixed(2)));
+            leanMassPercents.push(parseFloat((100 - currentBodyFat).toFixed(2)));
 
             if (week > 300) break;
 
@@ -314,16 +345,30 @@ function simulateBodyPlanner() {
         }
     });
 
-    updateBodyplannerChart({ labels, weights, bodyFats });
+    updateBodyplannerChart({ labels, weights, bodyFats, leanMasses, leanMassPercents });
 }
+
 
 function checkStageConditions(stage, week, currentWeight, currentBodyFat) {
     let isMet = stage.conditionLogic === 'AND' ? true : false;
+
+    let currentLeanMass = currentWeight * (1 - currentBodyFat / 100);
+    let maxLeanMass = calculateLeanMass(
+        parseFloat(heightInput.value),
+        parseFloat(wristInput.value),
+        parseFloat(ankleInput.value),
+        currentBodyFat
+    );
+    let leanMassToLimitPercent = (currentLeanMass / maxLeanMass) * 100;
+
     stage.conditions.forEach(condition => {
         let target = condition.targetValue;
         let value = 0;
+
         if (condition.type === 'weight') value = currentWeight;
+        if (condition.type === 'leanMass') value = currentLeanMass;
         if (condition.type === 'bodyFat') value = currentBodyFat;
+        if (condition.type === 'leanMassToLimitPercent') value = leanMassToLimitPercent;
         if (condition.type === 'weeks') value = week;
 
         if (stage.conditionLogic === 'AND') {
@@ -334,6 +379,11 @@ function checkStageConditions(stage, week, currentWeight, currentBodyFat) {
     });
     return isMet;
 }
+
+function calculateLeanMass(height, wrist, ankle, bodyFat) {
+    return Math.pow(height, 1.5) * (Math.sqrt(wrist) / 322.4 + Math.sqrt(ankle) / 241.9) * (bodyFat / 224 + 1);
+}
+
 
 function checkCondition(value, operator, target) {
     if (operator === '>=') return value >= target;
@@ -374,7 +424,9 @@ function renderConditionList() {
         div.innerHTML = `
             <select onchange="updateConditionType(${index}, this.value)">
                 <option value="weight" ${cond.type === 'weight' ? 'selected' : ''}>體重</option>
+                <option value="leanMass" ${cond.type === 'leanMass' ? 'selected' : ''}>淨體重</option>
                 <option value="bodyFat" ${cond.type === 'bodyFat' ? 'selected' : ''}>體脂率</option>
+                <option value="leanMassToLimitPercent" ${cond.type === 'leanMassToLimitPercent' ? 'selected' : ''}>淨體重/極限淨體重比</option>
                 <option value="weeks" ${cond.type === 'weeks' ? 'selected' : ''}>週數</option>
             </select>
             <select onchange="updateConditionOperator(${index}, this.value)">
@@ -388,6 +440,7 @@ function renderConditionList() {
         container.appendChild(div);
     });
 }
+
 
 function updateConditionType(index, value) {
     stages[currentStageIndex].conditions[index].type = value;
