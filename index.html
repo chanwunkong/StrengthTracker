@@ -114,15 +114,13 @@
 
           <!-- 每週體重變化 -->
           <label>每週體重變化: <span id="weeklyChangeDisplay">0</span> kg</label>
+          <label>每週熱量變化 (參考): <span id="weeklyCalorieDeltaDisplay">0</span> kcal</label>
           <div class="slider-container">
             <button type="button" onclick="adjustStageSlider('weeklyChange', -0.1)">-</button>
             <input type="range" id="weeklyChange" min="-1.5" max="1.5" step="0.01" value="0"
               oninput="updateStageSliderDisplay('weeklyChange', this.value)">
             <button type="button" onclick="adjustStageSlider('weeklyChange', 0.1)">+</button>
           </div><br>
-
-          <!-- 每週熱量變化（自動計算） -->
-          <label>每週熱量變化 (參考): <span id="weeklyCalorieDeltaDisplay">0</span> kcal</label>
 
           <!-- 肌肉變化比例 -->
           <label>肌肉變化比例: <span id="muscleRatioDisplay">50</span> %</label>
@@ -144,18 +142,18 @@
           <button onclick="addCondition()">+ 新增條件</button><br><br>
 
           <!-- 休息期 -->
-          <label>每幾週進入休息期: <span id="restIntervalDisplay">12</span> 週</label>
+          <label>每幾週進入休息期: <span id="restIntervalDisplay">4</span> 週</label>
           <div class="slider-container">
             <button type="button" onclick="adjustStageSlider('restInterval', -1)">-</button>
-            <input type="range" id="restInterval" min="0" max="20" step="1" value="12"
+            <input type="range" id="restInterval" min="0" max="20" step="1" value="4"
               oninput="updateStageSliderDisplay('restInterval', this.value)">
             <button type="button" onclick="adjustStageSlider('restInterval', 1)">+</button>
           </div><br>
 
-          <label>休息期持續週數: <span id="restDurationDisplay">2</span> 週</label>
+          <label>休息期持續週數: <span id="restDurationDisplay">1</span> 週</label>
           <div class="slider-container">
             <button type="button" onclick="adjustStageSlider('restDuration', -1)">-</button>
-            <input type="range" id="restDuration" min="0" max="8" step="1" value="2"
+            <input type="range" id="restDuration" min="0" max="8" step="1" value="1"
               oninput="updateStageSliderDisplay('restDuration', this.value)">
             <button type="button" onclick="adjustStageSlider('restDuration', 1)">+</button>
           </div><br>

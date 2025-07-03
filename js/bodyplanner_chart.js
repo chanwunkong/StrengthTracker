@@ -72,6 +72,10 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeBodyplannerChart();
     renderStageButtons();
     simulateBodyPlanner();
+
+    if (stages.length === 0) {
+        addStage();
+    }
 });
 
 function initializeBodyplannerChart() {
@@ -198,6 +202,7 @@ function selectStage(index) {
     document.getElementById('stageName').value = stage.name;
     document.getElementById('weeklyChange').value = stage.weeklyChange;
     document.getElementById('weeklyChangeDisplay').textContent = stage.weeklyChange;
+    document.getElementById('weeklyCalorieDeltaDisplay').textContent = (stage.weeklyChange * 7700).toFixed(0);
     document.getElementById('muscleRatio').value = stage.muscleRatio;
     document.getElementById('muscleRatioDisplay').textContent = stage.muscleRatio;
     document.getElementById('restInterval').value = stage.restInterval;
@@ -205,26 +210,36 @@ function selectStage(index) {
     document.getElementById('restDuration').value = stage.restDuration;
     document.getElementById('restDurationDisplay').textContent = stage.restDuration;
 
+    document.querySelectorAll('#conditionLogicGroup .radio-button').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelector(`#conditionLogicGroup .radio-button[data-value="${stage.conditionLogic}"]`).classList.add('active');
+
     renderConditionList();
     renderStageButtons();
     simulateBodyPlanner();
 }
 
+
+
 function addStage() {
     const newStage = {
         name: `階段 ${stages.length + 1}`,
-        weeklyChange: 0,
+        weeklyChange: -0.2,
         muscleRatio: 50,
-        restInterval: 12,
-        restDuration: 2,
+        restInterval: 4,
+        restDuration: 1,
         conditionLogic: 'OR',
-        conditions: []
+        conditions: [
+            { type: 'bodyFat', operator: '<=', targetValue: 20 } // 👉 預設條件：體脂 <= 20
+        ]
     };
     stages.push(newStage);
     selectStage(stages.length - 1);
     renderStageButtons();
     simulateBodyPlanner();
 }
+
 
 function deleteStage(index) {
     stages.splice(index, 1);
@@ -245,23 +260,33 @@ function deleteStage(index) {
 function clearStageInputs() {
     document.getElementById('stageName').value = '';
     document.getElementById('weeklyChange').value = 0;
-    document.getElementById('weeklyChangeDisplay').textContent = 0;
+    document.getElementById('weeklyChangeDisplay').textContent = stage.weeklyChange.toFixed(1);
     document.getElementById('muscleRatio').value = 50;
     document.getElementById('muscleRatioDisplay').textContent = 50;
-    document.getElementById('restInterval').value = 12;
-    document.getElementById('restIntervalDisplay').textContent = 12;
-    document.getElementById('restDuration').value = 2;
-    document.getElementById('restDurationDisplay').textContent = 2;
+    document.getElementById('restInterval').value = 4;
+    document.getElementById('restIntervalDisplay').textContent = 4;
+    document.getElementById('restDuration').value = 1;
+    document.getElementById('restDurationDisplay').textContent = 1;
     document.getElementById('conditionList').innerHTML = '';
 }
 
 function updateStageSliderDisplay(field, value) {
     if (currentStageIndex === null) return;
+
     const stage = stages[currentStageIndex];
     stage[field] = parseFloat(value);
-    document.getElementById(`${field}Display`).textContent = parseFloat(value);
+    document.getElementById(`${field}Display`).textContent = parseFloat(value).toFixed(1);
+
+    // 👉 每週體重變化連動熱量顯示
+    if (field === 'weeklyChange') {
+        // 1kg ≈ 7700 kcal，假設 1kg 體重變化 ≈ 7700 kcal 熱量差
+        const weeklyCalorieDelta = parseFloat(value) * 7700;
+        document.getElementById('weeklyCalorieDeltaDisplay').textContent = weeklyCalorieDelta.toFixed(0);
+    }
+
     simulateBodyPlanner();
 }
+
 
 function adjustStageSlider(field, step) {
     const slider = document.getElementById(field);
