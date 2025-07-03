@@ -75,7 +75,7 @@
           <button type="button" id="increaseAnkle">+</button>
         </div>
 
-        <button type="submit">儲存</button>
+        <button type="submit" onclick="event.preventDefault();">儲存</button>
       </form>
     </div>
 
@@ -102,9 +102,9 @@
           <label>階段名稱: <input type="text" id="stageName"></label><br><br>
 
           <!-- 目標類型 -->
-          <label>目標類型:</label>
+          <label>目標類型: <span id="goalTypeDisplay">增肌期</span></label>
           <div class="radio-button-group" id="goalTypeGroup">
-            <button type="button" class="radio-button" data-name="goalType" data-value="bulking"
+            <button type="button" class="radio-button active" data-name="goalType" data-value="bulking"
               onclick="selectRadioButton(this)">增肌期</button>
             <button type="button" class="radio-button" data-name="goalType" data-value="cutting"
               onclick="selectRadioButton(this)">減脂期</button>
@@ -170,6 +170,7 @@
   <!-- 主程式，整合 Firebase、UI、表單 -->
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.4.0"></script>
   <script type="module" src="js/main.js"></script>
   <script type="module" src="js/ffmi_chart.js"></script>
   <script type="module" src="js/muscle_limit_chart.js"></script>

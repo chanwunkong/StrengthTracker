@@ -21,13 +21,23 @@ window.selectLogicButton = selectLogicButton;
 function selectRadioButton(button) {
     const group = button.parentElement;
     const name = button.dataset.name;
+    const value = button.dataset.value;
+
     group.querySelectorAll('.radio-button').forEach(btn => btn.classList.remove('active'));
     button.classList.add('active');
+
+    // 顯示目前選取文字
+    if (name === 'goalType') {
+        const displayText = button.textContent;
+        document.getElementById('goalTypeDisplay').textContent = displayText;
+    }
+
     if (currentStageIndex !== null) {
-        stages[currentStageIndex][name] = button.dataset.value;
+        stages[currentStageIndex][name] = value;
         simulateBodyPlanner();
     }
 }
+
 
 function selectLogicButton(button) {
     if (currentStageIndex === null) return;
@@ -135,6 +145,9 @@ function initializeBodyplannerChart() {
                 },
                 legend: {
                     display: true
+                },
+                annotation: {
+                    annotations: {} // 這個要加上
                 }
             },
             interaction: {
@@ -157,6 +170,7 @@ function initializeBodyplannerChart() {
                 }
             }
         }
+
     });
 }
 
@@ -200,15 +214,18 @@ function selectStage(index) {
     const stage = stages[index];
 
     document.getElementById('stageName').value = stage.name;
+
     document.getElementById('weeklyChange').value = stage.weeklyChange;
-    document.getElementById('weeklyChangeDisplay').textContent = stage.weeklyChange;
-    document.getElementById('weeklyCalorieDeltaDisplay').textContent = (stage.weeklyChange * 7700).toFixed(0);
+    updateStageSliderDisplay('weeklyChange', stage.weeklyChange);
+
     document.getElementById('muscleRatio').value = stage.muscleRatio;
-    document.getElementById('muscleRatioDisplay').textContent = stage.muscleRatio;
+    updateStageSliderDisplay('muscleRatio', stage.muscleRatio);
+
     document.getElementById('restInterval').value = stage.restInterval;
-    document.getElementById('restIntervalDisplay').textContent = stage.restInterval;
+    updateStageSliderDisplay('restInterval', stage.restInterval);
+
     document.getElementById('restDuration').value = stage.restDuration;
-    document.getElementById('restDurationDisplay').textContent = stage.restDuration;
+    updateStageSliderDisplay('restDuration', stage.restDuration);
 
     document.querySelectorAll('#conditionLogicGroup .radio-button').forEach(btn => {
         btn.classList.remove('active');
@@ -222,6 +239,7 @@ function selectStage(index) {
 
 
 
+
 function addStage() {
     const newStage = {
         name: `階段 ${stages.length + 1}`,
@@ -231,7 +249,7 @@ function addStage() {
         restDuration: 1,
         conditionLogic: 'OR',
         conditions: [
-            { type: 'bodyFat', operator: '<=', targetValue: 20 } // 👉 預設條件：體脂 <= 20
+            { type: 'bodyFat', operator: '<=', targetValue: Math.max(5, Math.min(40, 20)) }
         ]
     };
     stages.push(newStage);
@@ -239,6 +257,7 @@ function addStage() {
     renderStageButtons();
     simulateBodyPlanner();
 }
+
 
 
 function deleteStage(index) {
@@ -259,19 +278,30 @@ function deleteStage(index) {
 
 function clearStageInputs() {
     document.getElementById('stageName').value = '';
+
     document.getElementById('weeklyChange').value = 0;
-    document.getElementById('weeklyChangeDisplay').textContent = stage.weeklyChange.toFixed(1);
+    updateStageSliderDisplay('weeklyChange', 0);
+
     document.getElementById('muscleRatio').value = 50;
-    document.getElementById('muscleRatioDisplay').textContent = 50;
+    updateStageSliderDisplay('muscleRatio', 50);
+
     document.getElementById('restInterval').value = 4;
-    document.getElementById('restIntervalDisplay').textContent = 4;
+    updateStageSliderDisplay('restInterval', 4);
+
     document.getElementById('restDuration').value = 1;
-    document.getElementById('restDurationDisplay').textContent = 1;
+    updateStageSliderDisplay('restDuration', 1);
+
     document.getElementById('conditionList').innerHTML = '';
+
+    simulateBodyPlanner();
 }
+
+
 
 function updateStageSliderDisplay(field, value) {
     if (currentStageIndex === null) return;
+
+    value = safeParseFloat(value, 0);
 
     const stage = stages[currentStageIndex];
     stage[field] = parseFloat(value);
@@ -279,7 +309,6 @@ function updateStageSliderDisplay(field, value) {
 
     // 👉 每週體重變化連動熱量顯示
     if (field === 'weeklyChange') {
-        // 1kg ≈ 7700 kcal，假設 1kg 體重變化 ≈ 7700 kcal 熱量差
         const weeklyCalorieDelta = parseFloat(value) * 7700;
         document.getElementById('weeklyCalorieDeltaDisplay').textContent = weeklyCalorieDelta.toFixed(0);
     }
@@ -288,23 +317,26 @@ function updateStageSliderDisplay(field, value) {
 }
 
 
+
 function adjustStageSlider(field, step) {
+    const sliderLimits = {
+        weeklyChange: { min: -1.5, max: 1.5 },
+        muscleRatio: { min: 0, max: 100 },
+        restInterval: { min: 0, max: 20 },
+        restDuration: { min: 0, max: 8 }
+    };
+
     const slider = document.getElementById(field);
     let newValue = parseFloat(slider.value) + step;
 
-    if (field === 'weeklyChange') {
-        newValue = Math.max(-1.5, Math.min(1.5, newValue));
-    } else if (field === 'muscleRatio') {
-        newValue = Math.max(0, Math.min(100, newValue));
-    } else if (field === 'restInterval') {
-        newValue = Math.max(0, Math.min(20, newValue));
-    } else if (field === 'restDuration') {
-        newValue = Math.max(0, Math.min(8, newValue));
+    if (sliderLimits[field]) {
+        newValue = Math.max(sliderLimits[field].min, Math.min(sliderLimits[field].max, newValue));
     }
 
     slider.value = newValue;
     updateStageSliderDisplay(field, newValue);
 }
+
 
 function updateBodyplannerChart(simulationData) {
     bodyplannerChart.data.labels = simulationData.labels;
@@ -313,8 +345,27 @@ function updateBodyplannerChart(simulationData) {
     bodyplannerChart.data.datasets[2].data = simulationData.leanMasses;
     bodyplannerChart.data.datasets[3].data = simulationData.leanMassPercents;
 
+    const annotations = {};
+    simulationData.stageEndWeeks.forEach((week, index) => {
+        annotations[`line${index}`] = {
+            type: 'line',
+            scaleID: 'x',
+            value: week,
+            borderColor: 'red',
+            borderWidth: 2,
+            label: {
+                display: true,
+                content: `第 ${week} 週`,
+                position: 'start'
+            }
+        };
+    });
+
+    bodyplannerChart.options.plugins.annotation.annotations = annotations;
+
     bodyplannerChart.update();
 }
+
 
 
 function simulateBodyPlanner() {
@@ -328,9 +379,10 @@ function simulateBodyPlanner() {
     const leanMassPercents = [parseFloat((100 - currentBodyFat).toFixed(2))];
 
     let week = 0;
+    const stageEndWeeks = [];
 
     if (stages.length === 0) {
-        updateBodyplannerChart({ labels, weights, bodyFats, leanMasses, leanMassPercents });
+        updateBodyplannerChart({ labels, weights, bodyFats, leanMasses, leanMassPercents, stageEndWeeks });
         return;
     }
 
@@ -345,7 +397,10 @@ function simulateBodyPlanner() {
             leanMasses.push(parseFloat(leanMass.toFixed(2)));
             leanMassPercents.push(parseFloat((100 - currentBodyFat).toFixed(2)));
 
-            if (week > 300) break;
+            if (week > 300) {
+                console.warn('模擬超過 300 週，強制中止，可能存在無限迴圈。');
+                break;
+            }
 
             if (stage.restInterval > 0 && (week % stage.restInterval) < stage.restDuration) {
                 continue;
@@ -363,15 +418,17 @@ function simulateBodyPlanner() {
             currentBodyFat = (totalFatMass / currentWeight) * 100;
 
             if (stage.conditions.length > 0 && checkStageConditions(stage, week, currentWeight, currentBodyFat)) {
+                stageEndWeeks.push(week);
                 break;
             }
 
-            if (Math.abs(weeklyChange) < 0.0001) break;
+            if (Math.abs(weeklyChange) < 0.0001 && !(stage.restInterval > 0 && (week % stage.restInterval) < stage.restDuration)) break;
         }
     });
 
-    updateBodyplannerChart({ labels, weights, bodyFats, leanMasses, leanMassPercents });
+    updateBodyplannerChart({ labels, weights, bodyFats, leanMasses, leanMassPercents, stageEndWeeks });
 }
+
 
 
 function checkStageConditions(stage, week, currentWeight, currentBodyFat) {
@@ -422,14 +479,20 @@ function saveStage() {
     const stage = stages[currentStageIndex];
 
     stage.name = document.getElementById('stageName').value;
-    stage.weeklyChange = parseFloat(document.getElementById('weeklyChange').value);
-    stage.muscleRatio = parseFloat(document.getElementById('muscleRatio').value);
-    stage.restInterval = parseFloat(document.getElementById('restInterval').value);
-    stage.restDuration = parseFloat(document.getElementById('restDuration').value);
+    stage.weeklyChange = safeParseFloat(document.getElementById('weeklyChange').value, 0);
+    stage.muscleRatio = safeParseFloat(document.getElementById('muscleRatio').value, 50);
+    stage.restInterval = safeParseFloat(document.getElementById('restInterval').value, 4);
+    stage.restDuration = safeParseFloat(document.getElementById('restDuration').value, 1);
 
     renderStageButtons();
     simulateBodyPlanner();
 }
+
+function safeParseFloat(value, defaultValue = 0) {
+    const num = parseFloat(value);
+    return isNaN(num) ? defaultValue : num;
+}
+
 
 function addCondition() {
     if (currentStageIndex === null) return;
@@ -478,7 +541,7 @@ function updateConditionOperator(index, value) {
 }
 
 function updateConditionTarget(index, value) {
-    stages[currentStageIndex].conditions[index].targetValue = parseFloat(value);
+    stages[currentStageIndex].conditions[index].targetValue = safeParseFloat(value, 0);
     simulateBodyPlanner();
 }
 
