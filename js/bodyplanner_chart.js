@@ -375,8 +375,18 @@ function simulateBodyPlanner() {
     const labels = [0];
     const weights = [parseFloat(currentWeight.toFixed(2))];
     const bodyFats = [parseFloat(currentBodyFat.toFixed(2))];
-    const leanMasses = [parseFloat((currentWeight * (1 - currentBodyFat / 100)).toFixed(2))];
-    const leanMassPercents = [parseFloat((100 - currentBodyFat).toFixed(2))];
+
+    let leanMass = currentWeight * (1 - currentBodyFat / 100);
+    let maxLeanMass = calculateLeanMass(
+        parseFloat(heightInput.value),
+        parseFloat(wristInput.value),
+        parseFloat(ankleInput.value),
+        currentBodyFat
+    );
+    let leanMassPercent = (leanMass / maxLeanMass) * 100;
+
+    const leanMasses = [parseFloat(leanMass.toFixed(2))];
+    const leanMassPercents = [parseFloat(leanMassPercent.toFixed(2))];
 
     let week = 0;
     const stageEndWeeks = [];
@@ -389,33 +399,66 @@ function simulateBodyPlanner() {
     stages.forEach(stage => {
         while (true) {
             week++;
-            labels.push(week);
-            weights.push(parseFloat(currentWeight.toFixed(2)));
-            bodyFats.push(parseFloat(currentBodyFat.toFixed(2)));
-
-            let leanMass = currentWeight * (1 - currentBodyFat / 100);
-            leanMasses.push(parseFloat(leanMass.toFixed(2)));
-            leanMassPercents.push(parseFloat((100 - currentBodyFat).toFixed(2)));
 
             if (week > 300) {
                 console.warn('模擬超過 300 週，強制中止，可能存在無限迴圈。');
                 break;
             }
 
+            // 👉 休息週
             if (stage.restInterval > 0 && (week % stage.restInterval) < stage.restDuration) {
-                continue;
+                // 推入資料（休息週的資料也是當週狀態）
+                labels.push(week);
+                weights.push(parseFloat(currentWeight.toFixed(2)));
+                bodyFats.push(parseFloat(currentBodyFat.toFixed(2)));
+
+                leanMass = currentWeight * (1 - currentBodyFat / 100);
+                maxLeanMass = calculateLeanMass(
+                    parseFloat(heightInput.value),
+                    parseFloat(wristInput.value),
+                    parseFloat(ankleInput.value),
+                    currentBodyFat
+                );
+                leanMassPercent = (leanMass / maxLeanMass) * 100;
+
+                leanMasses.push(parseFloat(leanMass.toFixed(2)));
+                leanMassPercents.push(parseFloat(leanMassPercent.toFixed(2)));
+
+                continue; // 休息週不進行變化
             }
 
+            // 👉 每週體重更新
             let weeklyChange = stage.weeklyChange;
             let muscleGain = weeklyChange * (stage.muscleRatio / 100);
             let fatGain = weeklyChange * (1 - stage.muscleRatio / 100);
 
-            currentWeight += weeklyChange;
-            let totalLeanMass = currentWeight * (1 - currentBodyFat / 100) + muscleGain;
-            let totalFatMass = currentWeight * (currentBodyFat / 100) + fatGain;
+            // 拆出目前淨體重與脂肪質量
+            leanMass = currentWeight * (1 - currentBodyFat / 100);
+            let fatMass = currentWeight * (currentBodyFat / 100);
 
-            currentWeight = totalLeanMass + totalFatMass;
-            currentBodyFat = (totalFatMass / currentWeight) * 100;
+            // 加上變化量
+            leanMass += muscleGain;
+            fatMass += fatGain;
+
+            // 更新體重與體脂率
+            currentWeight = leanMass + fatMass;
+            currentBodyFat = (fatMass / currentWeight) * 100;
+
+            // 👉 推入更新後的資料（正確）
+            labels.push(week);
+            weights.push(parseFloat(currentWeight.toFixed(2)));
+            bodyFats.push(parseFloat(currentBodyFat.toFixed(2)));
+
+            maxLeanMass = calculateLeanMass(
+                parseFloat(heightInput.value),
+                parseFloat(wristInput.value),
+                parseFloat(ankleInput.value),
+                currentBodyFat
+            );
+            leanMassPercent = (leanMass / maxLeanMass) * 100;
+
+            leanMasses.push(parseFloat(leanMass.toFixed(2)));
+            leanMassPercents.push(parseFloat(leanMassPercent.toFixed(2)));
 
             if (stage.conditions.length > 0 && checkStageConditions(stage, week, currentWeight, currentBodyFat)) {
                 stageEndWeeks.push(week);
@@ -428,7 +471,6 @@ function simulateBodyPlanner() {
 
     updateBodyplannerChart({ labels, weights, bodyFats, leanMasses, leanMassPercents, stageEndWeeks });
 }
-
 
 
 function checkStageConditions(stage, week, currentWeight, currentBodyFat) {
