@@ -56,7 +56,9 @@ onAuthStateChanged(auth, async (user) => {
                     gender: '男',
                     height: 170,
                     weight: 70,
-                    bodyFat: 20
+                    bodyFat: 20,
+                    wrist: 15,
+                    ankle: 20
                 };
                 await setDoc(userDocRef, defaultData);
                 updateUserInfo(defaultData);
@@ -73,7 +75,7 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 function updateUserInfo(data) {
-    const genderButtons = document.querySelectorAll('.gender-btn');
+    const genderButtons = document.querySelectorAll('[data-name="gender"]');
     const genderInput = document.getElementById('gender');
     const genderDisplay = document.getElementById('genderDisplay');
 
@@ -98,7 +100,7 @@ function updateUserInfo(data) {
 
     genderButtons.forEach(btn => {
         btn.classList.remove('active');
-        if (btn.getAttribute('data-gender') === data.gender) {
+        if (btn.getAttribute('data-value') === data.gender) {
             btn.classList.add('active');
         }
     });
@@ -124,14 +126,61 @@ function updateUserInfo(data) {
     ankleValue.textContent = parseFloat(data.ankle).toFixed(1);
 
     // 同步圖表
-    if (window.syncSliderValues //&& window.updateFFMIChart// 
-    ) {
+    if (window.syncSliderValues) {
         window.syncSliderValues();
-        // window.updateFFMIChart();
     }
     if (window.updateMuscleLimitChart) {
         window.updateMuscleLimitChart();
     }
 }
 
+// 👉 儲存資料
+window.saveUserData = async function () {
+    const user = auth.currentUser;
+    if (!user) {
+        alert('請先登入！');
+        return;
+    }
 
+    const userDocRef = doc(db, 'users', user.uid);
+
+    // 取得最新表單資料
+    const gender = document.getElementById('gender').value;
+    const height = parseFloat(document.getElementById('height').value);
+    const weight = parseFloat(document.getElementById('weight').value);
+    const bodyFat = parseFloat(document.getElementById('bodyFat').value);
+    const wrist = parseFloat(document.getElementById('wrist').value);
+    const ankle = parseFloat(document.getElementById('ankle').value);
+
+    const userData = { gender, height, weight, bodyFat, wrist, ankle };
+
+    try {
+        await setDoc(userDocRef, userData);
+        updateUserInfo(userData); // 儲存後立即更新畫面
+        alert('資料已成功儲存！');
+    } catch (error) {
+        console.error('儲存失敗：', error);
+        alert('資料儲存失敗，請稍後再試。');
+    }
+}
+
+// 👉 性別與其他選項按鈕選取事件
+window.selectRadioButton = function (button) {
+    const group = button.parentElement;
+    const buttons = group.querySelectorAll('.radio-button');
+
+    buttons.forEach(btn => btn.classList.remove('active'));
+    button.classList.add('active');
+
+    const dataName = button.getAttribute('data-name'); // e.g. gender
+    const dataValue = button.getAttribute('data-value'); // e.g. 男 or 女
+
+    document.getElementById(dataName).value = dataValue;
+
+    // 更新顯示文字
+    if (dataName === 'gender') {
+        document.getElementById('genderDisplay').textContent = dataValue;
+    } else if (dataName === 'goalType') {
+        document.getElementById('goalTypeDisplay').textContent = dataValue;
+    }
+}

@@ -25,9 +25,9 @@ const firebaseConfig = {
   measurementId: "G-NFM5EEWYHP"
 };
 
-// 初始化 Firebase
+// ✅ 必須正確綁定 app
 const app = initializeApp(firebaseConfig);
-const auth = getAuth();
-const db = getFirestore();
+const auth = getAuth(app);
+const db = getFirestore(app);
 
 export { auth, db, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, doc, setDoc, getDoc };
