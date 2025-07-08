@@ -63,14 +63,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    document.getElementById('weeklyChange').addEventListener('input', (e) => {
-        updateStageSliderDisplay('weeklyChange', e.target.value);
-    });
-
-    document.getElementById('muscleRatio').addEventListener('input', (e) => {
-        updateStageSliderDisplay('muscleRatio', e.target.value);
-    });
-
     document.getElementById('restInterval').addEventListener('input', (e) => {
         updateStageSliderDisplay('restInterval', e.target.value);
     });
@@ -215,11 +207,11 @@ function selectStage(index) {
 
     document.getElementById('stageName').value = stage.name;
 
-    document.getElementById('weeklyChange').value = stage.weeklyChange;
-    updateStageSliderDisplay('weeklyChange', stage.weeklyChange);
+    document.getElementById('muscleChange').value = stage.muscleChange;
+    updateStageSliderDisplay('muscleChange', stage.muscleChange);
 
-    document.getElementById('muscleRatio').value = stage.muscleRatio;
-    updateStageSliderDisplay('muscleRatio', stage.muscleRatio);
+    document.getElementById('fatChange').value = stage.fatChange;
+    updateStageSliderDisplay('fatChange', stage.fatChange);
 
     document.getElementById('restInterval').value = stage.restInterval;
     updateStageSliderDisplay('restInterval', stage.restInterval);
@@ -243,8 +235,8 @@ function selectStage(index) {
 function addStage() {
     const newStage = {
         name: `階段 ${stages.length + 1}`,
-        weeklyChange: -0.2,
-        muscleRatio: 50,
+        muscleChange: 0,
+        fatChange: 0,
         restInterval: 4,
         restDuration: 1,
         conditionLogic: 'OR',
@@ -279,11 +271,11 @@ function deleteStage(index) {
 function clearStageInputs() {
     document.getElementById('stageName').value = '';
 
-    document.getElementById('weeklyChange').value = 0;
-    updateStageSliderDisplay('weeklyChange', 0);
+    document.getElementById('muscleChange').value = 0;
+    updateStageSliderDisplay('muscleChange', 0);
 
-    document.getElementById('muscleRatio').value = 50;
-    updateStageSliderDisplay('muscleRatio', 50);
+    document.getElementById('fatChange').value = 0;
+    updateStageSliderDisplay('fatChange', 0);
 
     document.getElementById('restInterval').value = 4;
     updateStageSliderDisplay('restInterval', 4);
@@ -302,26 +294,30 @@ function updateStageSliderDisplay(field, value) {
     if (currentStageIndex === null) return;
 
     value = safeParseFloat(value, 0);
-
     const stage = stages[currentStageIndex];
-    stage[field] = parseFloat(value);
-    document.getElementById(`${field}Display`).textContent = parseFloat(value).toFixed(1);
+    stage[field] = value;
 
-    // 👉 每週體重變化連動熱量顯示
-    if (field === 'weeklyChange') {
-        const weeklyCalorieDelta = parseFloat(value) * 7700;
-        document.getElementById('weeklyCalorieDeltaDisplay').textContent = weeklyCalorieDelta.toFixed(0);
-    }
+    document.getElementById(`${field}Display`).textContent = value.toFixed(2);
+
+    // 自動計算體重變化與熱量變化
+    const muscleChange = stage.muscleChange || 0;
+    const fatChange = stage.fatChange || 0;
+    const totalChange = muscleChange + fatChange;
+    const calorieDelta = fatChange * 7700 + muscleChange * 2500; // 肌肉熱量成本估值
+
+    document.getElementById('weeklyChangeDisplay').textContent = totalChange.toFixed(2);
+    document.getElementById('weeklyCalorieDeltaDisplay').textContent = calorieDelta.toFixed(0);
 
     simulateBodyPlanner();
 }
 
 
 
+
 function adjustStageSlider(field, step) {
     const sliderLimits = {
-        weeklyChange: { min: -1.5, max: 1.5 },
-        muscleRatio: { min: 0, max: 100 },
+        muscleChange: { min: -1.5, max: 1.5 },
+        fatChange: { min: -1.5, max: 1.5 },
         restInterval: { min: 0, max: 20 },
         restDuration: { min: 0, max: 8 }
     };
@@ -428,9 +424,9 @@ function simulateBodyPlanner() {
             }
 
             // 👉 每週體重更新
-            let weeklyChange = stage.weeklyChange;
-            let muscleGain = weeklyChange * (stage.muscleRatio / 100);
-            let fatGain = weeklyChange * (1 - stage.muscleRatio / 100);
+            let muscleGain = stage.muscleChange || 0;
+            let fatGain = stage.fatChange || 0;
+            let weeklyChange = muscleGain + fatGain;
 
             // 拆出目前淨體重與脂肪質量
             leanMass = currentWeight * (1 - currentBodyFat / 100);
@@ -521,8 +517,8 @@ function saveStage() {
     const stage = stages[currentStageIndex];
 
     stage.name = document.getElementById('stageName').value;
-    stage.weeklyChange = safeParseFloat(document.getElementById('weeklyChange').value, 0);
-    stage.muscleRatio = safeParseFloat(document.getElementById('muscleRatio').value, 50);
+    stage.muscleChange = safeParseFloat(document.getElementById('muscleChange').value, 0);
+    stage.fatChange = safeParseFloat(document.getElementById('fatChange').value, 0);
     stage.restInterval = safeParseFloat(document.getElementById('restInterval').value, 4);
     stage.restDuration = safeParseFloat(document.getElementById('restDuration').value, 1);
 
