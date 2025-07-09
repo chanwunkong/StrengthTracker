@@ -162,7 +162,6 @@ function updateUserInfo(data) {
 
 }
 
-
 // 👉 儲存資料
 window.saveUserData = async function () {
     const user = auth.currentUser;
@@ -227,6 +226,63 @@ window.saveUserData = async function () {
     }
 }
 
+window.deleteUserRecord = async function () {
+    const user = auth.currentUser;
+    if (!user) {
+        alert('請先登入！');
+        return;
+    }
+
+    const recordDate = document.getElementById('recordDate').value;
+    if (!recordDate) {
+        alert('請選擇要刪除的紀錄日期');
+        return;
+    }
+
+    const confirmDelete = confirm(`確定要刪除 ${recordDate} 的紀錄嗎？`);
+    if (!confirmDelete) return;
+
+    try {
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDoc = await getDoc(userDocRef);
+
+        if (!userDoc.exists()) {
+            alert('使用者資料不存在');
+            return;
+        }
+
+        const data = userDoc.data();
+        const records = data.records || {};
+
+        if (!records[recordDate]) {
+            alert('該日期沒有紀錄可刪除');
+            return;
+        }
+
+        delete records[recordDate];
+
+        await setDoc(userDocRef, {
+            ...data,
+            records
+        });
+
+        alert(`已刪除 ${recordDate} 的紀錄`);
+
+        // 可選：重設 UI 顯示為預設值
+        document.getElementById('weight').value = 70;
+        document.getElementById('weightValue').textContent = '70.0';
+        document.getElementById('bodyFat').value = 20;
+        document.getElementById('bodyFatValue').textContent = '20.0';
+
+        // 若有圖表更新函數
+        if (window.syncSliderValues) window.syncSliderValues();
+        if (window.updateMuscleLimitChart) window.updateMuscleLimitChart();
+
+    } catch (error) {
+        console.error('刪除紀錄錯誤：', error);
+        alert('刪除失敗，請稍後再試。');
+    }
+};
 
 
 // 👉 性別與其他選項按鈕選取事件
@@ -316,8 +372,15 @@ function initCalendarWithRecords(records) {
         },
         // 使用自定義的 markClass 顯示有紀錄的日期
         onDayCreate: function (dObj, dStr, fp, dayElem) {
-            const dateStr = dayElem.dateObj.toISOString().split('T')[0];
-            if (recordDates.includes(dateStr)) {
+            const dateObj = dayElem.dateObj;
+
+            const year = dateObj.getFullYear();
+            const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+            const day = dateObj.getDate().toString().padStart(2, '0');
+
+            const localDateStr = `${year}-${month}-${day}`;
+
+            if (recordDates.includes(localDateStr)) {
                 dayElem.classList.add('has-record');
             }
         }
