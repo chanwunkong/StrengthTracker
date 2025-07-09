@@ -155,6 +155,11 @@ function updateUserInfo(data) {
     if (window.updateMuscleLimitChart) window.updateMuscleLimitChart();
     initCalendarWithRecords(data.records || {});
 
+    // 如果 bodyplanner_chart 有定義 initStagesFromData()，就呼叫它
+    if (data.stages && window.initStagesFromData) {
+        window.initStagesFromData(data.stages);
+    }
+
 }
 
 
@@ -300,7 +305,7 @@ recordDateInput.addEventListener('change', async () => {
 
 function initCalendarWithRecords(records) {
     const recordDates = Object.keys(records || {});
-    
+
     flatpickr("#recordDate", {
         dateFormat: "Y-m-d",
         defaultDate: new Date(),

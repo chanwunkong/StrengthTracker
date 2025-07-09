@@ -1,4 +1,18 @@
+// bodyplanner_chart.js
+import { auth, db, doc, setDoc, getDoc } from './firebase.js';
 
+
+window.initStagesFromData = function (fetchedStages) {
+    stages = Array.isArray(fetchedStages) ? fetchedStages : [];
+    currentStageIndex = 0;
+
+    renderStageButtons();
+    if (stages.length > 0) {
+        selectStage(0);
+    } else {
+        addStage();
+    }
+};
 
 let heightInput, weightInput, bodyFatInput, wristInput, ankleInput;
 let bodyplannerChart;
@@ -343,6 +357,11 @@ function updateBodyplannerChart(simulationData) {
 
     const annotations = {};
     simulationData.stageEndWeeks.forEach((week, index) => {
+        const w = simulationData.weights[week];
+        const bf = simulationData.bodyFats[week];
+        const lm = simulationData.leanMasses[week];
+        const lmp = simulationData.leanMassPercents[week];
+
         annotations[`line${index}`] = {
             type: 'line',
             scaleID: 'x',
@@ -351,16 +370,26 @@ function updateBodyplannerChart(simulationData) {
             borderWidth: 2,
             label: {
                 display: true,
-                content: `第 ${week} 週`,
-                position: 'start'
+                content: [
+                    `週 ${week}`,
+                    `體重: ${w.toFixed(1)}kg`,
+                    `體脂: ${bf.toFixed(1)}%`,
+                    `淨重: ${lm.toFixed(1)}kg`,
+                    `淨重比: ${lmp.toFixed(1)}%`
+                ],
+                position: 'start',
+                backgroundColor: 'rgba(255,255,255,0.8)',
+                color: 'black',
+                font: { size: 10 },
+                padding: 6
             }
         };
     });
 
     bodyplannerChart.options.plugins.annotation.annotations = annotations;
-
     bodyplannerChart.update();
 }
+
 
 
 
@@ -512,10 +541,12 @@ function checkCondition(value, operator, target) {
     return false;
 }
 
-function saveStage() {
+async function saveStage() {
     if (currentStageIndex === null) return;
+
     const stage = stages[currentStageIndex];
 
+    // 更新當前階段的值
     stage.name = document.getElementById('stageName').value;
     stage.muscleChange = safeParseFloat(document.getElementById('muscleChange').value, 0);
     stage.fatChange = safeParseFloat(document.getElementById('fatChange').value, 0);
@@ -524,7 +555,33 @@ function saveStage() {
 
     renderStageButtons();
     simulateBodyPlanner();
+
+    // ✅ 儲存階段資料到 Firebase
+    const user = auth.currentUser;
+    if (!user) return;
+
+    try {
+        const userDocRef = doc(db, 'users', user.uid);
+        const docSnap = await getDoc(userDocRef);
+
+        if (docSnap.exists()) {
+            const oldData = docSnap.data();
+            const updatedData = {
+                ...oldData,
+                stages: stages
+            };
+            await setDoc(userDocRef, updatedData);
+            console.log('✅ 階段資料已成功儲存');
+        } else {
+            console.warn('⚠️ 使用者文件不存在，無法儲存階段');
+        }
+
+    } catch (error) {
+        console.error('🚨 儲存階段失敗：', error);
+    }
 }
+
+
 
 function safeParseFloat(value, defaultValue = 0) {
     const num = parseFloat(value);
