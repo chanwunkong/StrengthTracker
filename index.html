@@ -7,6 +7,9 @@
   <title>StrengthTracker</title>
   <link rel="stylesheet" href="css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Flatpickr CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
 </head>
 
 <body>
@@ -43,6 +46,25 @@
           <button type="button" id="increaseHeight">+</button>
         </div>
 
+        <!-- 手腕圍 -->
+        <label>手腕圍: <span id="wristValue">15.0</span> cm</label>
+        <div class="slider-container">
+          <button type="button" id="decreaseWrist">-</button>
+          <input type="range" id="wrist" min="10" max="25" step="0.1" value="15">
+          <button type="button" id="increaseWrist">+</button>
+        </div>
+
+        <!-- 踝圍 -->
+        <label>踝圍: <span id="ankleValue">20.0</span> cm</label>
+        <div class="slider-container">
+          <button type="button" id="decreaseAnkle">-</button>
+          <input type="range" id="ankle" min="15" max="30" step="0.1" value="20">
+          <button type="button" id="increaseAnkle">+</button>
+        </div>
+
+        <!-- 日期 -->
+        <label>紀錄日期: <input type="text" id="recordDate"></label>
+
         <!-- 體重 -->
         <label>體重: <span id="weightValue">70.0</span> kg</label>
         <div class="slider-container">
@@ -59,21 +81,7 @@
           <button type="button" id="increaseBodyFat">+</button>
         </div>
 
-        <!-- 手腕圍 -->
-        <label>手腕圍: <span id="wristValue">15.0</span> cm</label>
-        <div class="slider-container">
-          <button type="button" id="decreaseWrist">-</button>
-          <input type="range" id="wrist" min="10" max="25" step="0.1" value="15">
-          <button type="button" id="increaseWrist">+</button>
-        </div>
 
-        <!-- 踝圍 -->
-        <label>踝圍: <span id="ankleValue">20.0</span> cm</label>
-        <div class="slider-container">
-          <button type="button" id="decreaseAnkle">-</button>
-          <input type="range" id="ankle" min="15" max="30" step="0.1" value="20">
-          <button type="button" id="increaseAnkle">+</button>
-        </div>
 
         <button type="button" onclick="saveUserData();">儲存</button>
 
@@ -180,6 +188,9 @@
   <!-- <script type="module" src="js/ffmi_chart.js"></script> -->
   <script type="module" src="js/muscle_limit_chart.js"></script>
   <script type="module" src="js/bodyplanner_chart.js"></script>
+  <!-- Flatpickr JS -->
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
 
 </body>
 

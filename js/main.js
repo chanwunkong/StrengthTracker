@@ -48,21 +48,31 @@ onAuthStateChanged(auth, async (user) => {
             const userDocRef = doc(db, 'users', user.uid);
             const userDoc = await getDoc(userDocRef);
 
+            let data;
             if (userDoc.exists()) {
-                const data = userDoc.data();
-                updateUserInfo(data);
+                data = userDoc.data();
             } else {
-                const defaultData = {
+                data = {
                     gender: '男',
                     height: 170,
                     weight: 70,
                     bodyFat: 20,
                     wrist: 15,
-                    ankle: 20
+                    ankle: 20,
+                    records: {}
                 };
-                await setDoc(userDocRef, defaultData);
-                updateUserInfo(defaultData);
+                await setDoc(userDocRef, data);
             }
+
+            // 更新使用者基本資訊
+            updateUserInfo(data);
+
+            // ⚠️ 等資料載入完再設定今天的日期並觸發載入
+            const today = new Date().toISOString().split('T')[0];
+            const recordDateInput = document.getElementById('recordDate');
+            recordDateInput.value = today;
+            recordDateInput.dispatchEvent(new Event('change'));
+
         } catch (error) {
             console.error('讀取錯誤：', error);
         }
@@ -73,6 +83,7 @@ onAuthStateChanged(auth, async (user) => {
         userInfo.style.display = 'none';
     }
 });
+
 
 function updateUserInfo(data) {
     const genderButtons = document.querySelectorAll('[data-name="gender"]');
@@ -105,34 +116,47 @@ function updateUserInfo(data) {
         }
     });
 
-    // 身高
+    // 身高、手腕、踝圍（這些與紀錄無關，直接設定）
     heightSlider.value = data.height;
     heightValue.textContent = parseFloat(data.height).toFixed(1);
 
-    // 體重
-    weightSlider.value = data.weight;
-    weightValue.textContent = parseFloat(data.weight).toFixed(1);
-
-    // 體脂
-    bodyFatSlider.value = data.bodyFat;
-    bodyFatValue.textContent = parseFloat(data.bodyFat).toFixed(1);
-
-    // 手腕圍
     wristSlider.value = data.wrist;
     wristValue.textContent = parseFloat(data.wrist).toFixed(1);
 
-    // 踝圍
     ankleSlider.value = data.ankle;
     ankleValue.textContent = parseFloat(data.ankle).toFixed(1);
 
-    // 同步圖表
-    if (window.syncSliderValues) {
-        window.syncSliderValues();
+    // 🔽 自動載入最近一筆紀錄（體重/體脂）
+    const records = data.records || {};
+    const dateList = Object.keys(records).sort(); // 升冪排列日期
+    const latestDate = dateList[dateList.length - 1];
+
+    if (latestDate) {
+        const latest = records[latestDate];
+        const recordDateInput = document.getElementById('recordDate');
+        recordDateInput.value = latestDate;
+
+        weightSlider.value = latest.weight;
+        weightValue.textContent = parseFloat(latest.weight).toFixed(1);
+
+        bodyFatSlider.value = latest.bodyFat;
+        bodyFatValue.textContent = parseFloat(latest.bodyFat).toFixed(1);
+    } else {
+        // 如果沒有紀錄，設為預設值
+        weightSlider.value = 70;
+        weightValue.textContent = '70.0';
+
+        bodyFatSlider.value = 20;
+        bodyFatValue.textContent = '20.0';
     }
-    if (window.updateMuscleLimitChart) {
-        window.updateMuscleLimitChart();
-    }
+
+    // 同步圖表（如有）
+    if (window.syncSliderValues) window.syncSliderValues();
+    if (window.updateMuscleLimitChart) window.updateMuscleLimitChart();
+    initCalendarWithRecords(data.records || {});
+
 }
+
 
 // 👉 儲存資料
 window.saveUserData = async function () {
@@ -142,9 +166,13 @@ window.saveUserData = async function () {
         return;
     }
 
-    const userDocRef = doc(db, 'users', user.uid);
+    // 取得輸入值
+    const recordDate = document.getElementById('recordDate').value;
+    if (!recordDate) {
+        alert('請選擇紀錄日期');
+        return;
+    }
 
-    // 取得最新表單資料
     const gender = document.getElementById('gender').value;
     const height = parseFloat(document.getElementById('height').value);
     const weight = parseFloat(document.getElementById('weight').value);
@@ -152,17 +180,49 @@ window.saveUserData = async function () {
     const wrist = parseFloat(document.getElementById('wrist').value);
     const ankle = parseFloat(document.getElementById('ankle').value);
 
-    const userData = { gender, height, weight, bodyFat, wrist, ankle };
+    const userDocRef = doc(db, 'users', user.uid);
+
+    const userData = {
+        gender,
+        height,
+        wrist,
+        ankle,
+        records: {
+            [recordDate]: {
+                weight,
+                bodyFat
+            }
+        }
+    };
 
     try {
-        await setDoc(userDocRef, userData);
-        updateUserInfo(userData); // 儲存後立即更新畫面
+        const existingDoc = await getDoc(userDocRef);
+        if (existingDoc.exists()) {
+            // 合併新紀錄到現有紀錄
+            const oldData = existingDoc.data();
+            const updatedRecords = { ...(oldData.records || {}), ...userData.records };
+
+            await setDoc(userDocRef, {
+                ...oldData,
+                gender,
+                height,
+                wrist,
+                ankle,
+                records: updatedRecords
+            });
+
+        } else {
+            await setDoc(userDocRef, userData);
+        }
+
         alert('資料已成功儲存！');
     } catch (error) {
         console.error('儲存失敗：', error);
         alert('資料儲存失敗，請稍後再試。');
     }
 }
+
+
 
 // 👉 性別與其他選項按鈕選取事件
 window.selectRadioButton = function (button) {
@@ -183,4 +243,78 @@ window.selectRadioButton = function (button) {
     } else if (dataName === 'goalType') {
         document.getElementById('goalTypeDisplay').textContent = dataValue;
     }
+}
+
+const recordDateInput = document.getElementById('recordDate');
+
+recordDateInput.addEventListener('change', async () => {
+    const user = auth.currentUser;
+    const recordDate = recordDateInput.value;
+    if (!user || !recordDate) return;
+
+    const userDocRef = doc(db, 'users', user.uid);
+    try {
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+            const data = userDoc.data();
+            const records = data.records || {};
+
+            // 如果該日期有紀錄，就使用它
+            if (records[recordDate]) {
+                const record = records[recordDate];
+                document.getElementById('weight').value = record.weight;
+                document.getElementById('weightValue').textContent = parseFloat(record.weight).toFixed(1);
+
+                document.getElementById('bodyFat').value = record.bodyFat;
+                document.getElementById('bodyFatValue').textContent = parseFloat(record.bodyFat).toFixed(1);
+                return;
+            }
+
+            // 該日期無資料，嘗試使用最近一筆舊資料
+            const dates = Object.keys(records).sort(); // 升冪排序
+            const earlierDates = dates.filter(d => d < recordDate); // 找到所有比選取日期更早的
+
+            if (earlierDates.length > 0) {
+                const latestPriorDate = earlierDates[earlierDates.length - 1];
+                const fallback = records[latestPriorDate];
+
+                document.getElementById('weight').value = fallback.weight;
+                document.getElementById('weightValue').textContent = parseFloat(fallback.weight).toFixed(1);
+
+                document.getElementById('bodyFat').value = fallback.bodyFat;
+                document.getElementById('bodyFatValue').textContent = parseFloat(fallback.bodyFat).toFixed(1);
+                return;
+            }
+
+            // 沒有任何紀錄 ➜ 使用預設值
+            document.getElementById('weight').value = 70;
+            document.getElementById('weightValue').textContent = '70.0';
+
+            document.getElementById('bodyFat').value = 20;
+            document.getElementById('bodyFatValue').textContent = '20.0';
+        }
+    } catch (error) {
+        console.error('載入紀錄錯誤：', error);
+    }
+});
+
+function initCalendarWithRecords(records) {
+    const recordDates = Object.keys(records || {});
+    
+    flatpickr("#recordDate", {
+        dateFormat: "Y-m-d",
+        defaultDate: new Date(),
+        disableMobile: true,
+        onChange: function (selectedDates, dateStr) {
+            document.getElementById('recordDate').value = dateStr;
+            document.getElementById('recordDate').dispatchEvent(new Event('change'));
+        },
+        // 使用自定義的 markClass 顯示有紀錄的日期
+        onDayCreate: function (dObj, dStr, fp, dayElem) {
+            const dateStr = dayElem.dateObj.toISOString().split('T')[0];
+            if (recordDates.includes(dateStr)) {
+                dayElem.classList.add('has-record');
+            }
+        }
+    });
 }
