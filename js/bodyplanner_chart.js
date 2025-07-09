@@ -1,12 +1,14 @@
 // bodyplanner_chart.js
 import { auth, db, doc, setDoc, getDoc } from './firebase.js';
 
-
-window.initStagesFromData = function (fetchedStages) {
-    stages = Array.isArray(fetchedStages) ? fetchedStages : [];
+window.initStagesFromData = function (data) {
+    stages = Array.isArray(data.stages) ? data.stages : [];
+    planStartDate = data.startDate || formatDateToLocalString(new Date());
     currentStageIndex = 0;
 
+    initStartDatePicker();
     renderStageButtons();
+
     if (stages.length > 0) {
         selectStage(0);
     } else {
@@ -14,11 +16,13 @@ window.initStagesFromData = function (fetchedStages) {
     }
 };
 
+
 let heightInput, weightInput, bodyFatInput, wristInput, ankleInput;
 let bodyplannerChart;
 
 let stages = [];
 let currentStageIndex = null;
+let planStartDate;
 
 // 將所有需要的函式掛到 window
 window.addCondition = addCondition;
@@ -52,7 +56,6 @@ function selectRadioButton(button) {
     }
 }
 
-
 function selectLogicButton(button) {
     if (currentStageIndex === null) return;
     const group = button.parentElement;
@@ -68,6 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
     bodyFatInput = document.getElementById('bodyFat');
     wristInput = document.getElementById('wrist');
     ankleInput = document.getElementById('ankle');
+
 
     document.getElementById('addPhaseBtn').addEventListener('click', () => addStage());
 
@@ -93,6 +97,21 @@ document.addEventListener('DOMContentLoaded', () => {
         addStage();
     }
 });
+
+function initStartDatePicker() {
+    flatpickr("#startDate", {
+        dateFormat: "Y-m-d",
+        defaultDate: planStartDate,
+        disableMobile: true,
+        onChange: (selectedDates) => {
+            if (selectedDates.length > 0) {
+                planStartDate = formatDateToLocalString(selectedDates[0]);
+                simulateBodyPlanner(); // 重新模擬
+            }
+        }
+    });
+}
+
 
 function initializeBodyplannerChart() {
     const ctx = document.getElementById('bodyplannerChart').getContext('2d');
@@ -180,7 +199,6 @@ function initializeBodyplannerChart() {
     });
 }
 
-
 function renderStageButtons() {
     const container = document.getElementById('stageButtons');
     container.innerHTML = '';
@@ -221,6 +239,10 @@ function selectStage(index) {
 
     document.getElementById('stageName').value = stage.name;
 
+    if (document.getElementById('startDate')._flatpickr) {
+        document.getElementById('startDate')._flatpickr.setDate(planStartDate, true);
+    }
+
     document.getElementById('muscleChange').value = stage.muscleChange;
     updateStageSliderDisplay('muscleChange', stage.muscleChange);
 
@@ -243,9 +265,6 @@ function selectStage(index) {
     simulateBodyPlanner();
 }
 
-
-
-
 function addStage() {
     const newStage = {
         name: `階段 ${stages.length + 1}`,
@@ -263,8 +282,6 @@ function addStage() {
     renderStageButtons();
     simulateBodyPlanner();
 }
-
-
 
 function deleteStage(index) {
     stages.splice(index, 1);
@@ -302,8 +319,6 @@ function clearStageInputs() {
     simulateBodyPlanner();
 }
 
-
-
 function updateStageSliderDisplay(field, value) {
     if (currentStageIndex === null) return;
 
@@ -325,9 +340,6 @@ function updateStageSliderDisplay(field, value) {
     simulateBodyPlanner();
 }
 
-
-
-
 function adjustStageSlider(field, step) {
     const sliderLimits = {
         muscleChange: { min: -1.5, max: 1.5 },
@@ -346,7 +358,6 @@ function adjustStageSlider(field, step) {
     slider.value = newValue;
     updateStageSliderDisplay(field, newValue);
 }
-
 
 function updateBodyplannerChart(simulationData) {
     bodyplannerChart.data.labels = simulationData.labels;
@@ -389,9 +400,6 @@ function updateBodyplannerChart(simulationData) {
     bodyplannerChart.options.plugins.annotation.annotations = annotations;
     bodyplannerChart.update();
 }
-
-
-
 
 function simulateBodyPlanner() {
     let currentWeight = parseFloat(weightInput.value);
@@ -497,7 +505,6 @@ function simulateBodyPlanner() {
     updateBodyplannerChart({ labels, weights, bodyFats, leanMasses, leanMassPercents, stageEndWeeks });
 }
 
-
 function checkStageConditions(stage, week, currentWeight, currentBodyFat) {
     let isMet = stage.conditionLogic === 'AND' ? true : false;
 
@@ -533,7 +540,6 @@ function calculateLeanMass(height, wrist, ankle, bodyFat) {
     return Math.pow(height, 1.5) * (Math.sqrt(wrist) / 322.4 + Math.sqrt(ankle) / 241.9) * (bodyFat / 224 + 1);
 }
 
-
 function checkCondition(value, operator, target) {
     if (operator === '>=') return value >= target;
     if (operator === '<=') return value <= target;
@@ -556,38 +562,51 @@ async function saveStage() {
     renderStageButtons();
     simulateBodyPlanner();
 
-    // ✅ 儲存階段資料到 Firebase
     const user = auth.currentUser;
-    if (!user) return;
+    if (!user) {
+        alert('請先登入再儲存。');
+        return;
+    }
+
+    // ✅ 防止 planStartDate 為 undefined，重新讀取 DOM 日期或給預設
+    if (!planStartDate) {
+        const flatpickrInstance = document.getElementById('startDate')._flatpickr;
+        if (flatpickrInstance && flatpickrInstance.selectedDates.length > 0) {
+            planStartDate = formatDateToLocalString(flatpickrInstance.selectedDates[0]);
+        } else {
+            planStartDate = formatDateToLocalString(new Date()); // fallback 今天
+        }
+    }
 
     try {
         const userDocRef = doc(db, 'users', user.uid);
-        const docSnap = await getDoc(userDocRef);
 
-        if (docSnap.exists()) {
-            const oldData = docSnap.data();
-            const updatedData = {
-                ...oldData,
-                stages: stages
-            };
-            await setDoc(userDocRef, updatedData);
-            console.log('✅ 階段資料已成功儲存');
-        } else {
-            console.warn('⚠️ 使用者文件不存在，無法儲存階段');
+        const updatedData = {
+            startDate: planStartDate,
+            stages: stages
+        };
+
+        console.log("📦 將儲存：", updatedData); // 除錯確認
+
+        await setDoc(userDocRef, updatedData, { merge: true });
+        console.log('✅ 階段資料已成功儲存');
+        alert('✅ 儲存成功！');
+
+        if (document.getElementById('startDate')._flatpickr) {
+            document.getElementById('startDate')._flatpickr.setDate(planStartDate, true);
         }
 
     } catch (error) {
         console.error('🚨 儲存階段失敗：', error);
+        alert(`🚨 儲存失敗：${error.message}`);
     }
 }
-
 
 
 function safeParseFloat(value, defaultValue = 0) {
     const num = parseFloat(value);
     return isNaN(num) ? defaultValue : num;
 }
-
 
 function addCondition() {
     if (currentStageIndex === null) return;
@@ -624,7 +643,6 @@ function renderConditionList() {
     });
 }
 
-
 function updateConditionType(index, value) {
     stages[currentStageIndex].conditions[index].type = value;
     simulateBodyPlanner();
@@ -644,4 +662,11 @@ function deleteCondition(index) {
     stages[currentStageIndex].conditions.splice(index, 1);
     renderConditionList();
     simulateBodyPlanner();
+}
+
+function formatDateToLocalString(dateObj) {
+    const year = dateObj.getFullYear();
+    const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+    const day = dateObj.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
