@@ -546,7 +546,9 @@ function simulateBodyPlanner() {
             }
         }
 
-        stageStartWeeks.push(week + 1); 
+        if (stages.indexOf(stage) < stages.length - 1) {
+    stageStartWeeks.push(week);
+}
     });
 
     const highlightIndexes = Array.from(new Set([...stageStartWeeks, ...stageEndWeeks]));
