@@ -16,7 +16,6 @@ window.initStagesFromData = function (data) {
     }
 };
 
-
 let heightInput, weightInput, bodyFatInput, wristInput, ankleInput;
 let bodyplannerChart;
 
@@ -24,7 +23,6 @@ let stages = [];
 let currentStageIndex = null;
 let planStartDate;
 
-// 將所有需要的函式掛到 window
 window.addCondition = addCondition;
 window.updateConditionType = updateConditionType;
 window.updateConditionOperator = updateConditionOperator;
@@ -36,6 +34,37 @@ window.saveStage = saveStage;
 window.selectRadioButton = selectRadioButton;
 window.selectLogicButton = selectLogicButton;
 
+window.loadHistoricalRecords = function (startDate, records) {
+    const start = new Date(startDate);
+    const weekLabels = [];
+    const weightPoints = [];
+    const bodyFatPoints = [];
+
+    Object.keys(records)
+        .sort()
+        .forEach(dateStr => {
+            const date = new Date(dateStr);
+            const diffDays = (date - start) / (1000 * 60 * 60 * 24);
+            if (diffDays < 0) return;
+
+            const week = diffDays / 7;
+            const data = records[dateStr];
+
+            weekLabels.push(week.toFixed(2));
+            weightPoints.push(parseFloat(data.weight.toFixed(2)));
+            bodyFatPoints.push(parseFloat(data.bodyFat.toFixed(2)));
+        });
+
+    bodyplannerChart.data.labels = weekLabels;
+    bodyplannerChart.data.datasets[0].data = weightPoints;
+    bodyplannerChart.data.datasets[1].data = bodyFatPoints;
+
+    bodyplannerChart.data.datasets[2].data = [];
+    bodyplannerChart.data.datasets[3].data = [];
+
+    bodyplannerChart.update();
+};
+
 function selectRadioButton(button) {
     const group = button.parentElement;
     const name = button.dataset.name;
@@ -44,7 +73,6 @@ function selectRadioButton(button) {
     group.querySelectorAll('.radio-button').forEach(btn => btn.classList.remove('active'));
     button.classList.add('active');
 
-    // 顯示目前選取文字
     if (name === 'goalType') {
         const displayText = button.textContent;
         document.getElementById('goalTypeDisplay').textContent = displayText;
@@ -106,12 +134,11 @@ function initStartDatePicker() {
         onChange: (selectedDates) => {
             if (selectedDates.length > 0) {
                 planStartDate = formatDateToLocalString(selectedDates[0]);
-                simulateBodyPlanner(); // 重新模擬
+                simulateBodyPlanner();
             }
         }
     });
 }
-
 
 function initializeBodyplannerChart() {
     const ctx = document.getElementById('bodyplannerChart').getContext('2d');
@@ -172,7 +199,26 @@ function initializeBodyplannerChart() {
                     display: true
                 },
                 annotation: {
-                    annotations: {} // 這個要加上
+                    annotations: {}
+                },
+                datalabels: {
+                    display: function(ctx) {
+                        const highlightIndexes = ctx.chart.options.plugins.datalabels.highlightIndexes || [];
+                        return highlightIndexes.includes(ctx.dataIndex);
+                    },
+                    align: 'top',
+                    anchor: 'end',
+                    formatter: function(value) {
+                        return value.toFixed(1);
+                    },
+                    font: {
+                        weight: 'bold',
+                        size: 10
+                    },
+                    color: 'black',
+                    backgroundColor: 'rgba(255,255,255,0.7)',
+                    borderRadius: 3,
+                    padding: 4
                 }
             },
             interaction: {
@@ -194,10 +240,12 @@ function initializeBodyplannerChart() {
                     grid: { drawOnChartArea: false }
                 }
             }
-        }
-
+        },
+        plugins: [ChartDataLabels]
     });
 }
+
+
 
 function renderStageButtons() {
     const container = document.getElementById('stageButtons');
@@ -328,11 +376,10 @@ function updateStageSliderDisplay(field, value) {
 
     document.getElementById(`${field}Display`).textContent = value.toFixed(2);
 
-    // 自動計算體重變化與熱量變化
     const muscleChange = stage.muscleChange || 0;
     const fatChange = stage.fatChange || 0;
     const totalChange = muscleChange + fatChange;
-    const calorieDelta = fatChange * 7700 + muscleChange * 2500; // 肌肉熱量成本估值
+    const calorieDelta = fatChange * 7700 + muscleChange * 2500; 
 
     document.getElementById('weeklyChangeDisplay').textContent = totalChange.toFixed(2);
     document.getElementById('weeklyCalorieDeltaDisplay').textContent = calorieDelta.toFixed(0);
@@ -423,6 +470,7 @@ function simulateBodyPlanner() {
 
     let week = 0;
     const stageEndWeeks = [];
+    const stageStartWeeks = [0]; 
 
     if (stages.length === 0) {
         updateBodyplannerChart({ labels, weights, bodyFats, leanMasses, leanMassPercents, stageEndWeeks });
@@ -430,6 +478,8 @@ function simulateBodyPlanner() {
     }
 
     stages.forEach(stage => {
+        const stageStart = week + 1;
+
         while (true) {
             week++;
 
@@ -438,9 +488,7 @@ function simulateBodyPlanner() {
                 break;
             }
 
-            // 👉 休息週
             if (stage.restInterval > 0 && (week % stage.restInterval) < stage.restDuration) {
-                // 推入資料（休息週的資料也是當週狀態）
                 labels.push(week);
                 weights.push(parseFloat(currentWeight.toFixed(2)));
                 bodyFats.push(parseFloat(currentBodyFat.toFixed(2)));
@@ -457,27 +505,21 @@ function simulateBodyPlanner() {
                 leanMasses.push(parseFloat(leanMass.toFixed(2)));
                 leanMassPercents.push(parseFloat(leanMassPercent.toFixed(2)));
 
-                continue; // 休息週不進行變化
+                continue;
             }
 
-            // 👉 每週體重更新
             let muscleGain = stage.muscleChange || 0;
             let fatGain = stage.fatChange || 0;
-            let weeklyChange = muscleGain + fatGain;
 
-            // 拆出目前淨體重與脂肪質量
             leanMass = currentWeight * (1 - currentBodyFat / 100);
             let fatMass = currentWeight * (currentBodyFat / 100);
 
-            // 加上變化量
             leanMass += muscleGain;
             fatMass += fatGain;
 
-            // 更新體重與體脂率
             currentWeight = leanMass + fatMass;
             currentBodyFat = (fatMass / currentWeight) * 100;
 
-            // 👉 推入更新後的資料（正確）
             labels.push(week);
             weights.push(parseFloat(currentWeight.toFixed(2)));
             bodyFats.push(parseFloat(currentBodyFat.toFixed(2)));
@@ -498,9 +540,20 @@ function simulateBodyPlanner() {
                 break;
             }
 
-            if (Math.abs(weeklyChange) < 0.0001 && !(stage.restInterval > 0 && (week % stage.restInterval) < stage.restDuration)) break;
+            if (Math.abs(muscleGain + fatGain) < 0.0001 &&
+                !(stage.restInterval > 0 && (week % stage.restInterval) < stage.restDuration)) {
+                break;
+            }
         }
+
+        stageStartWeeks.push(week + 1); 
     });
+
+    const highlightIndexes = Array.from(new Set([...stageStartWeeks, ...stageEndWeeks]));
+
+    if (bodyplannerChart?.options?.plugins?.datalabels) {
+        bodyplannerChart.options.plugins.datalabels.highlightIndexes = highlightIndexes;
+    }
 
     updateBodyplannerChart({ labels, weights, bodyFats, leanMasses, leanMassPercents, stageEndWeeks });
 }
@@ -552,7 +605,6 @@ async function saveStage() {
 
     const stage = stages[currentStageIndex];
 
-    // 更新當前階段的值
     stage.name = document.getElementById('stageName').value;
     stage.muscleChange = safeParseFloat(document.getElementById('muscleChange').value, 0);
     stage.fatChange = safeParseFloat(document.getElementById('fatChange').value, 0);
@@ -568,13 +620,12 @@ async function saveStage() {
         return;
     }
 
-    // ✅ 防止 planStartDate 為 undefined，重新讀取 DOM 日期或給預設
     if (!planStartDate) {
         const flatpickrInstance = document.getElementById('startDate')._flatpickr;
         if (flatpickrInstance && flatpickrInstance.selectedDates.length > 0) {
             planStartDate = formatDateToLocalString(flatpickrInstance.selectedDates[0]);
         } else {
-            planStartDate = formatDateToLocalString(new Date()); // fallback 今天
+            planStartDate = formatDateToLocalString(new Date()); 
         }
     }
 
@@ -586,22 +637,21 @@ async function saveStage() {
             stages: stages
         };
 
-        console.log("📦 將儲存：", updatedData); // 除錯確認
+        console.log("將儲存：", updatedData); 
 
         await setDoc(userDocRef, updatedData, { merge: true });
-        console.log('✅ 階段資料已成功儲存');
-        alert('✅ 儲存成功！');
+        console.log('階段資料已成功儲存');
+        alert('儲存成功！');
 
         if (document.getElementById('startDate')._flatpickr) {
             document.getElementById('startDate')._flatpickr.setDate(planStartDate, true);
         }
 
     } catch (error) {
-        console.error('🚨 儲存階段失敗：', error);
-        alert(`🚨 儲存失敗：${error.message}`);
+        console.error('儲存階段失敗：', error);
+        alert(`儲存失敗：${error.message}`);
     }
 }
-
 
 function safeParseFloat(value, defaultValue = 0) {
     const num = parseFloat(value);
