@@ -156,9 +156,12 @@ function updateUserInfo(data) {
     initCalendarWithRecords(data.records || {});
 
     // 如果 bodyplanner_chart 有定義 initStagesFromData()，就呼叫它
-    if (data.stages && window.initStagesFromData) {
-        window.initStagesFromData(data.stages);
-    }
+if (window.initStagesFromData) {
+    window.initStagesFromData({
+        startDate: data.startDate || new Date().toISOString().split('T')[0],
+        stages: data.stages || []
+    });
+}
 
 }
 
