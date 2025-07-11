@@ -14,7 +14,6 @@ import {
   getDoc
 } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
-// Firebase 設定
 const firebaseConfig = {
   apiKey: "AIzaSyAI5lx2XT3ysBhTREBW637s_AlWC49LYJQ",
   authDomain: "test-5dbba.firebaseapp.com",
@@ -25,7 +24,6 @@ const firebaseConfig = {
   measurementId: "G-NFM5EEWYHP"
 };
 
-// ✅ 必須正確綁定 app
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);

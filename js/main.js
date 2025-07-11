@@ -19,11 +19,11 @@ const logoutBtn = document.getElementById('logoutBtn');
 const userInfo = document.getElementById('userInfo');
 const welcomeMsg = document.getElementById('welcomeMsg');
 
-// 初始化 UI 和表單
 setupUI();
 setupForm(auth);
 
-// Google 登入
+
+
 loginBtn.addEventListener('click', () => {
     const provider = new GoogleAuthProvider();
     signInWithPopup(auth, provider)
@@ -31,12 +31,10 @@ loginBtn.addEventListener('click', () => {
         .catch((error) => console.error('登入錯誤：', error.message));
 });
 
-// Google 登出
 logoutBtn.addEventListener('click', () => {
     signOut(auth);
 });
 
-// 監聽登入狀態
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         loginBtn.style.display = 'none';
@@ -64,10 +62,8 @@ onAuthStateChanged(auth, async (user) => {
                 await setDoc(userDocRef, data);
             }
 
-            // 更新使用者基本資訊
             updateUserInfo(data);
 
-            // ⚠️ 等資料載入完再設定今天的日期並觸發載入
             const today = new Date().toISOString().split('T')[0];
             const recordDateInput = document.getElementById('recordDate');
             recordDateInput.value = today;
@@ -105,7 +101,6 @@ function updateUserInfo(data) {
     const ankleSlider = document.getElementById('ankle');
     const ankleValue = document.getElementById('ankleValue');
 
-    // 性別
     genderInput.value = data.gender;
     genderDisplay.textContent = data.gender;
 
@@ -116,7 +111,6 @@ function updateUserInfo(data) {
         }
     });
 
-    // 身高、手腕、踝圍（這些與紀錄無關，直接設定）
     heightSlider.value = data.height;
     heightValue.textContent = parseFloat(data.height).toFixed(1);
 
@@ -126,9 +120,9 @@ function updateUserInfo(data) {
     ankleSlider.value = data.ankle;
     ankleValue.textContent = parseFloat(data.ankle).toFixed(1);
 
-    // 🔽 自動載入最近一筆紀錄（體重/體脂）
+
     const records = data.records || {};
-    const dateList = Object.keys(records).sort(); // 升冪排列日期
+    const dateList = Object.keys(records).sort(); 
     const latestDate = dateList[dateList.length - 1];
 
     if (latestDate) {
@@ -142,30 +136,31 @@ function updateUserInfo(data) {
         bodyFatSlider.value = latest.bodyFat;
         bodyFatValue.textContent = parseFloat(latest.bodyFat).toFixed(1);
     } else {
-        // 如果沒有紀錄，設為預設值
         weightSlider.value = 70;
         weightValue.textContent = '70.0';
-
         bodyFatSlider.value = 20;
         bodyFatValue.textContent = '20.0';
     }
 
-    // 同步圖表（如有）
     if (window.syncSliderValues) window.syncSliderValues();
     if (window.updateMuscleLimitChart) window.updateMuscleLimitChart();
-    initCalendarWithRecords(data.records || {});
+    initCalendarWithRecords(records);
 
-    // 如果 bodyplanner_chart 有定義 initStagesFromData()，就呼叫它
-if (window.initStagesFromData) {
-    window.initStagesFromData({
-        startDate: data.startDate || new Date().toISOString().split('T')[0],
-        stages: data.stages || []
-    });
+    if (window.initStagesFromData) {
+        window.initStagesFromData({
+            startDate: data.startDate || new Date().toISOString().split('T')[0],
+            stages: data.stages || []
+        });
+    }
+
+window.bodyPlannerChartReadyCallback = () => {
+    if (window.loadHistoricalRecords) {
+        const startDate = data.startDate || new Date().toISOString().split('T')[0];
+        window.loadHistoricalRecords(startDate, records);
+    }
+};
 }
 
-}
-
-// 👉 儲存資料
 window.saveUserData = async function () {
     const user = auth.currentUser;
     if (!user) {
@@ -173,8 +168,6 @@ window.saveUserData = async function () {
         return;
     }
 
-    // 取得輸入值
-    const recordDate = document.getElementById('recordDate').value;
     if (!recordDate) {
         alert('請選擇紀錄日期');
         return;
@@ -205,7 +198,7 @@ window.saveUserData = async function () {
     try {
         const existingDoc = await getDoc(userDocRef);
         if (existingDoc.exists()) {
-            // 合併新紀錄到現有紀錄
+
             const oldData = existingDoc.data();
             const updatedRecords = { ...(oldData.records || {}), ...userData.records };
 
@@ -271,13 +264,12 @@ window.deleteUserRecord = async function () {
 
         alert(`已刪除 ${recordDate} 的紀錄`);
 
-        // 可選：重設 UI 顯示為預設值
         document.getElementById('weight').value = 70;
         document.getElementById('weightValue').textContent = '70.0';
         document.getElementById('bodyFat').value = 20;
         document.getElementById('bodyFatValue').textContent = '20.0';
 
-        // 若有圖表更新函數
+
         if (window.syncSliderValues) window.syncSliderValues();
         if (window.updateMuscleLimitChart) window.updateMuscleLimitChart();
 
@@ -287,8 +279,6 @@ window.deleteUserRecord = async function () {
     }
 };
 
-
-// 👉 性別與其他選項按鈕選取事件
 window.selectRadioButton = function (button) {
     const group = button.parentElement;
     const buttons = group.querySelectorAll('.radio-button');
@@ -296,12 +286,11 @@ window.selectRadioButton = function (button) {
     buttons.forEach(btn => btn.classList.remove('active'));
     button.classList.add('active');
 
-    const dataName = button.getAttribute('data-name'); // e.g. gender
-    const dataValue = button.getAttribute('data-value'); // e.g. 男 or 女
+    const dataName = button.getAttribute('data-name'); 
+    const dataValue = button.getAttribute('data-value'); 
 
     document.getElementById(dataName).value = dataValue;
 
-    // 更新顯示文字
     if (dataName === 'gender') {
         document.getElementById('genderDisplay').textContent = dataValue;
     } else if (dataName === 'goalType') {
@@ -323,7 +312,6 @@ recordDateInput.addEventListener('change', async () => {
             const data = userDoc.data();
             const records = data.records || {};
 
-            // 如果該日期有紀錄，就使用它
             if (records[recordDate]) {
                 const record = records[recordDate];
                 document.getElementById('weight').value = record.weight;
@@ -334,9 +322,8 @@ recordDateInput.addEventListener('change', async () => {
                 return;
             }
 
-            // 該日期無資料，嘗試使用最近一筆舊資料
-            const dates = Object.keys(records).sort(); // 升冪排序
-            const earlierDates = dates.filter(d => d < recordDate); // 找到所有比選取日期更早的
+            const dates = Object.keys(records).sort(); 
+            const earlierDates = dates.filter(d => d < recordDate); 
 
             if (earlierDates.length > 0) {
                 const latestPriorDate = earlierDates[earlierDates.length - 1];
@@ -350,7 +337,6 @@ recordDateInput.addEventListener('change', async () => {
                 return;
             }
 
-            // 沒有任何紀錄 ➜ 使用預設值
             document.getElementById('weight').value = 70;
             document.getElementById('weightValue').textContent = '70.0';
 
@@ -373,7 +359,6 @@ function initCalendarWithRecords(records) {
             document.getElementById('recordDate').value = dateStr;
             document.getElementById('recordDate').dispatchEvent(new Event('change'));
         },
-        // 使用自定義的 markClass 顯示有紀錄的日期
         onDayCreate: function (dObj, dStr, fp, dayElem) {
             const dateObj = dayElem.dateObj;
 

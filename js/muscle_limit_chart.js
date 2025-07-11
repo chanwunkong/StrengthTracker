@@ -1,3 +1,4 @@
+// muscle_limit_chart.js
 document.addEventListener('DOMContentLoaded', () => {
     const heightInput = document.getElementById('height');
     const wristInput = document.getElementById('wrist');
@@ -70,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 {
                     label: '極限體重',
                     data: totalWeights,
-      borderColor: 'rgba(255, 99, 132, 1)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
                     fill: false,
                     tension: 0.1,
                     hidden: true,
@@ -78,14 +79,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 {
                     label: '95% 極限體重',
                     data: totalWeights95,
-      borderColor: 'rgba(255, 159, 192, 1)',
+                    borderColor: 'rgba(255, 159, 192, 1)',
                     fill: false,
                     tension: 0.1,
                 },
                 {
                     label: '極限淨體重',
                     data: maxLeanMass,
-      borderColor: 'rgba(54, 162, 235, 1)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
                     fill: false,
                     tension: 0.1,
                     hidden: true,
@@ -93,14 +94,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 {
                     label: '95% 極限淨體重',
                     data: maxLeanMass95,
-      borderColor: 'rgba(135, 206, 250, 1)',
+                    borderColor: 'rgba(135, 206, 250, 1)',
                     fill: false,
                     tension: 0.1,
                 },
                 {
                     label: '極限 FFMI',
                     data: ffmiData,
-      borderColor: 'rgba(255, 206, 86, 1)',
+                    borderColor: 'rgba(255, 206, 86, 1)',
                     fill: false,
                     tension: 0.1,
                     hidden: true,
@@ -108,13 +109,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 {
                     label: '95% 極限 FFMI',
                     data: ffmi95Data,
-      borderColor: 'rgba(255, 235, 150, 1)', 
+                    borderColor: 'rgba(255, 235, 150, 1)',
                     fill: false,
                 },
                 {
                     label: '目前體重',
                     data: [{ x: currentBodyFat, y: currentWeight }],
-      backgroundColor: 'rgba(200, 30, 80, 1)',
+                    backgroundColor: 'rgba(200, 30, 80, 1)',
                     pointRadius: 6,
                     pointHoverRadius: 8,
                     showLine: false,
@@ -122,16 +123,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 {
                     label: '目前淨體重',
                     data: [{ x: currentBodyFat, y: parseFloat(currentLeanMass.toFixed(1)) }],
-      backgroundColor: 'rgba(30, 120, 210, 1)',
+                    backgroundColor: 'rgba(30, 120, 210, 1)',
                     pointRadius: 6,
                     pointHoverRadius: 8,
                     showLine: false,
-                    customPercent: progressPercent.toFixed(1), // 👉 額外傳遞百分比
+                    customPercent: progressPercent.toFixed(1),
                 },
                 {
                     label: '目前 FFMI',
                     data: [{ x: currentBodyFat, y: parseFloat(currentFFMI.toFixed(1)) }],
-        backgroundColor: 'rgba(204, 163, 0, 1)',
+                    backgroundColor: 'rgba(204, 163, 0, 1)',
                     pointRadius: 6,
                     pointHoverRadius: 8,
                     showLine: false,
@@ -156,7 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         intersect: false,
                         callbacks: {
                             title: (tooltipItems) => {
-                                const bodyFat = tooltipItems[0].label; // 取第一筆資料的 X 軸
+                                const bodyFat = tooltipItems[0].label;
                                 return `體脂率: ${bodyFat}%`;
                             }
                         }
@@ -167,12 +168,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     datalabels: {
                         align: 'top',
                         formatter: (value, context) => {
-                            if (context.datasetIndex === 6) { // 目前體重資料點
+                            if (context.datasetIndex === 6) {
                                 return `${value.y}kg`;
-                            } else if (context.datasetIndex === 7) { // 目前淨體重資料點
+                            } else if (context.datasetIndex === 7) {
                                 const percent = context.chart.data.datasets[7].customPercent;
                                 return `${value.y}kg\n(${percent}%)`;
-                            } else if (context.datasetIndex === 8) { // 目前 FFMI 資料點
+                            } else if (context.datasetIndex === 8) {
                                 return `FFMI: ${value.y}`;
                             }
                             return '';
@@ -188,14 +189,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 scales: {
                     x: {
-                        type: 'linear',  // 這裡一定要加
+                        type: 'linear',
                         title: { display: true, text: '體脂率 (%)' },
                         min: 5,
                         max: 50
                     },
                     y: {
                         min: 0,
-                        // max: 150,
                         title: { display: true, text: '體重 (kg)' }
                     }
                 }

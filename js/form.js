@@ -1,3 +1,4 @@
+// form.js
 import { db, doc, setDoc } from './firebase.js';
 
 const userForm = document.getElementById('userForm');
@@ -6,7 +7,6 @@ const heightSlider = document.getElementById('height');
 const weightSlider = document.getElementById('weight');
 const bodyFatSlider = document.getElementById('bodyFat');
 
-// 👉 新增手腕圍和踝圍滑桿
 const wristSlider = document.getElementById('wrist');
 const ankleSlider = document.getElementById('ankle');
 

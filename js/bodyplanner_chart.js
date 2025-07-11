@@ -8,6 +8,8 @@ let stages = [];
 let currentStageIndex = null;
 let planStartDate;
 
+window.bodyplannerChart = bodyplannerChart;
+
 window.addCondition = addCondition;
 window.updateConditionType = updateConditionType;
 window.updateConditionOperator = updateConditionOperator;
@@ -36,9 +38,9 @@ window.initStagesFromData = function (data) {
 
 window.loadHistoricalRecords = function (startDate, records) {
     const start = new Date(startDate);
+    const actualWeightPoints = [];
+    const actualBodyFatPoints = [];
     const weekLabels = [];
-    const weightPoints = [];
-    const bodyFatPoints = [];
 
     Object.keys(records)
         .sort()
@@ -51,19 +53,16 @@ window.loadHistoricalRecords = function (startDate, records) {
             const data = records[dateStr];
 
             weekLabels.push(week.toFixed(2));
-            weightPoints.push(parseFloat(data.weight.toFixed(2)));
-            bodyFatPoints.push(parseFloat(data.bodyFat.toFixed(2)));
+            actualWeightPoints.push({ x: parseFloat(week.toFixed(2)), y: parseFloat(data.weight.toFixed(2)) });
+            actualBodyFatPoints.push({ x: parseFloat(week.toFixed(2)), y: parseFloat(data.bodyFat.toFixed(2)) });
         });
 
-    bodyplannerChart.data.labels = weekLabels;
-    bodyplannerChart.data.datasets[0].data = weightPoints;
-    bodyplannerChart.data.datasets[1].data = bodyFatPoints;
-
-    bodyplannerChart.data.datasets[2].data = [];
-    bodyplannerChart.data.datasets[3].data = [];
+    bodyplannerChart.data.datasets[4].data = actualWeightPoints;
+    bodyplannerChart.data.datasets[5].data = actualBodyFatPoints;
 
     bodyplannerChart.update();
 };
+
 
 function selectRadioButton(button) {
     const group = button.parentElement;
@@ -180,12 +179,34 @@ function initializeBodyplannerChart() {
                     fill: false,
                     tension: 0.1,
                     yAxisID: 'y2'
+                },
+                {
+                    label: '實際體重紀錄',
+                    data: [],
+                    borderColor: 'black',
+                    backgroundColor: 'black',
+                    fill: false,
+                    pointRadius: 5,
+                    showLine: false,
+                    parsing: false
+                },
+                {
+                    label: '實際體脂紀錄',
+                    data: [],
+                    borderColor: 'gray',
+                    backgroundColor: 'gray',
+                    fill: false,
+                    pointRadius: 5,
+                    showLine: false,
+                    yAxisID: 'y2',
+                    parsing: false
                 }
             ]
         },
         options: {
             responsive: true,
             animation: false,
+
             plugins: {
                 title: {
                     display: true,
@@ -202,13 +223,13 @@ function initializeBodyplannerChart() {
                     annotations: {}
                 },
                 datalabels: {
-                    display: function(ctx) {
+                    display: function (ctx) {
                         const highlightIndexes = ctx.chart.options.plugins.datalabels.highlightIndexes || [];
                         return highlightIndexes.includes(ctx.dataIndex);
                     },
                     align: 'top',
                     anchor: 'end',
-                    formatter: function(value) {
+                    formatter: function (value) {
                         return value.toFixed(1);
                     },
                     font: {
@@ -377,7 +398,7 @@ function updateStageSliderDisplay(field, value) {
     const muscleChange = stage.muscleChange || 0;
     const fatChange = stage.fatChange || 0;
     const totalChange = muscleChange + fatChange;
-    const calorieDelta = fatChange * 7700 + muscleChange * 2500; 
+    const calorieDelta = fatChange * 7700 + muscleChange * 2500;
 
     document.getElementById('weeklyChangeDisplay').textContent = totalChange.toFixed(2);
     document.getElementById('weeklyCalorieDeltaDisplay').textContent = calorieDelta.toFixed(0);
@@ -468,7 +489,7 @@ function simulateBodyPlanner() {
 
     let week = 0;
     const stageEndWeeks = [];
-    const stageStartWeeks = [0]; 
+    const stageStartWeeks = [0];
 
     if (stages.length === 0) {
         updateBodyplannerChart({ labels, weights, bodyFats, leanMasses, leanMassPercents, stageEndWeeks });
@@ -545,8 +566,8 @@ function simulateBodyPlanner() {
         }
 
         if (stages.indexOf(stage) < stages.length - 1) {
-    stageStartWeeks.push(week);
-}
+            stageStartWeeks.push(week);
+        }
     });
 
     const highlightIndexes = Array.from(new Set([...stageStartWeeks, ...stageEndWeeks]));
@@ -625,7 +646,7 @@ async function saveStage() {
         if (flatpickrInstance && flatpickrInstance.selectedDates.length > 0) {
             planStartDate = formatDateToLocalString(flatpickrInstance.selectedDates[0]);
         } else {
-            planStartDate = formatDateToLocalString(new Date()); 
+            planStartDate = formatDateToLocalString(new Date());
         }
     }
 
@@ -637,7 +658,7 @@ async function saveStage() {
             stages: stages
         };
 
-        console.log("將儲存：", updatedData); 
+        console.log("將儲存：", updatedData);
 
         await setDoc(userDocRef, updatedData, { merge: true });
         console.log('階段資料已成功儲存');
@@ -719,4 +740,8 @@ function formatDateToLocalString(dateObj) {
     const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
     const day = dateObj.getDate().toString().padStart(2, '0');
     return `${year}-${month}-${day}`;
+}
+
+if (window.bodyPlannerChartReadyCallback) {
+    window.bodyPlannerChartReadyCallback();
 }

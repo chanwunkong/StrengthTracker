@@ -1,3 +1,4 @@
+// ui.js
 const toggleSidebar = document.getElementById('toggleSidebar');
 const sidebar = document.getElementById('sidebar');
 const formContainer = document.querySelector('.form-container');
@@ -32,13 +33,11 @@ const decreaseAnkle = document.getElementById('decreaseAnkle');
 const increaseAnkle = document.getElementById('increaseAnkle');
 
 export function setupUI() {
-    // 側邊欄切換
     toggleSidebar.addEventListener('click', () => {
         sidebar.classList.toggle('collapsed');
         formContainer.style.marginLeft = sidebar.classList.contains('collapsed') ? '20px' : '270px';
     });
 
-    // 性別選擇按鈕
     genderButtons.forEach(button => {
         button.addEventListener('click', () => {
             genderButtons.forEach(btn => btn.classList.remove('active'));
@@ -48,7 +47,6 @@ export function setupUI() {
         });
     });
 
-    // 滑桿加減設定
     setupSlider(heightSlider, heightValue, decreaseHeight, increaseHeight, 0.1);
     setupSlider(weightSlider, weightValue, decreaseWeight, increaseWeight, 0.1);
     setupSlider(bodyFatSlider, bodyFatValue, decreaseBodyFat, increaseBodyFat, 0.1);
@@ -56,7 +54,6 @@ export function setupUI() {
     setupSlider(ankleSlider, ankleValue, decreaseAnkle, increaseAnkle, 0.1);
 }
 
-// ✅ 觸發所有圖表更新
 function triggerAllCharts() {
     if (window.syncSliderValues) window.syncSliderValues();
     if (window.updateFFMIChart) window.updateFFMIChart();
