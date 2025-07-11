@@ -1,21 +1,6 @@
 // bodyplanner_chart.js
 import { auth, db, doc, setDoc, getDoc } from './firebase.js';
 
-window.initStagesFromData = function (data) {
-    stages = Array.isArray(data.stages) ? data.stages : [];
-    planStartDate = data.startDate || formatDateToLocalString(new Date());
-    currentStageIndex = 0;
-
-    initStartDatePicker();
-    renderStageButtons();
-
-    if (stages.length > 0) {
-        selectStage(0);
-    } else {
-        addStage();
-    }
-};
-
 let heightInput, weightInput, bodyFatInput, wristInput, ankleInput;
 let bodyplannerChart;
 
@@ -33,6 +18,21 @@ window.adjustStageSlider = adjustStageSlider;
 window.saveStage = saveStage;
 window.selectRadioButton = selectRadioButton;
 window.selectLogicButton = selectLogicButton;
+
+window.initStagesFromData = function (data) {
+    stages = Array.isArray(data.stages) ? data.stages : [];
+    planStartDate = data.startDate || formatDateToLocalString(new Date());
+    currentStageIndex = 0;
+
+    initStartDatePicker();
+    renderStageButtons();
+
+    if (stages.length > 0) {
+        selectStage(0);
+    } else {
+        addStage();
+    }
+};
 
 window.loadHistoricalRecords = function (startDate, records) {
     const start = new Date(startDate);
@@ -244,8 +244,6 @@ function initializeBodyplannerChart() {
         plugins: [ChartDataLabels]
     });
 }
-
-
 
 function renderStageButtons() {
     const container = document.getElementById('stageButtons');

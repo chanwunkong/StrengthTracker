@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 {
                     label: '極限體重',
                     data: totalWeights,
-                    borderColor: 'rgba(75, 192, 192, 1)',
+      borderColor: 'rgba(255, 99, 132, 1)',
                     fill: false,
                     tension: 0.1,
                     hidden: true,
@@ -78,14 +78,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 {
                     label: '95% 極限體重',
                     data: totalWeights95,
-                    borderColor: 'rgba(255, 159, 64, 1)',
+      borderColor: 'rgba(255, 159, 192, 1)',
                     fill: false,
                     tension: 0.1,
                 },
                 {
                     label: '極限淨體重',
                     data: maxLeanMass,
-                    borderColor: 'rgba(153, 102, 255, 1)',
+      borderColor: 'rgba(54, 162, 235, 1)',
                     fill: false,
                     tension: 0.1,
                     hidden: true,
@@ -93,14 +93,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 {
                     label: '95% 極限淨體重',
                     data: maxLeanMass95,
-                    borderColor: 'rgba(255, 99, 132, 1)',
+      borderColor: 'rgba(135, 206, 250, 1)',
                     fill: false,
                     tension: 0.1,
                 },
                 {
                     label: '極限 FFMI',
                     data: ffmiData,
-                    borderColor: 'rgba(54, 162, 235, 1)',
+      borderColor: 'rgba(255, 206, 86, 1)',
                     fill: false,
                     tension: 0.1,
                     hidden: true,
@@ -108,13 +108,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 {
                     label: '95% 極限 FFMI',
                     data: ffmi95Data,
-                    borderColor: 'rgba(255, 206, 86, 1)',
+      borderColor: 'rgba(255, 235, 150, 1)', 
                     fill: false,
                 },
                 {
                     label: '目前體重',
                     data: [{ x: currentBodyFat, y: currentWeight }],
-                    backgroundColor: 'red',
+      backgroundColor: 'rgba(200, 30, 80, 1)',
                     pointRadius: 6,
                     pointHoverRadius: 8,
                     showLine: false,
@@ -122,7 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 {
                     label: '目前淨體重',
                     data: [{ x: currentBodyFat, y: parseFloat(currentLeanMass.toFixed(1)) }],
-                    backgroundColor: 'red',
+      backgroundColor: 'rgba(30, 120, 210, 1)',
                     pointRadius: 6,
                     pointHoverRadius: 8,
                     showLine: false,
@@ -131,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 {
                     label: '目前 FFMI',
                     data: [{ x: currentBodyFat, y: parseFloat(currentFFMI.toFixed(1)) }],
-                    backgroundColor: 'red',
+        backgroundColor: 'rgba(204, 163, 0, 1)',
                     pointRadius: 6,
                     pointHoverRadius: 8,
                     showLine: false,
@@ -178,9 +178,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             return '';
                         },
                         color: (context) => {
-                            if (context.datasetIndex === 6) return 'red';
-                            if (context.datasetIndex === 7) return 'red';
-                            if (context.datasetIndex === 8) return 'red';
+                            if (context.datasetIndex === 6) return 'rgba(255, 99, 132, 0.8)';
+                            if (context.datasetIndex === 7) return 'rgba(54, 162, 235, 0.8)';
+                            if (context.datasetIndex === 8) return 'rgba(255, 206, 86, 0.8)';
                             return 'black';
                         }
 
