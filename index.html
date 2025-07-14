@@ -23,7 +23,7 @@
       <p id="welcomeMsg"></p>
 
 
-    <!-- 表單區塊 -->
+      <!-- 表單區塊 -->
 
       <h2>使用者資訊</h2>
       <form id="userForm">
@@ -132,7 +132,7 @@
           <label>每週肌肉變化量: <span id="muscleChangeDisplay">0</span> kg</label>
           <div class="slider-container">
             <button type="button" onclick="adjustStageSlider('muscleChange', -0.1)">-</button>
-            <input type="range" id="muscleChange" min="-1.5" max="1.5" step="0.01" value="0"
+            <input type="range" id="muscleChange" min="-1.5" max="1.5" step="0.1" value="0"
               oninput="updateStageSliderDisplay('muscleChange', this.value)">
             <button type="button" onclick="adjustStageSlider('muscleChange', 0.1)">+</button>
           </div><br>
@@ -141,7 +141,7 @@
           <label>每週脂肪變化量: <span id="fatChangeDisplay">0</span> kg</label>
           <div class="slider-container">
             <button type="button" onclick="adjustStageSlider('fatChange', -0.1)">-</button>
-            <input type="range" id="fatChange" min="-1.5" max="1.5" step="0.01" value="0"
+            <input type="range" id="fatChange" min="-1.5" max="1.5" step="0.1" value="0"
               oninput="updateStageSliderDisplay('fatChange', this.value)">
             <button type="button" onclick="adjustStageSlider('fatChange', 0.1)">+</button>
           </div><br>

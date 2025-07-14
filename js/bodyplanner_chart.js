@@ -99,7 +99,6 @@ document.addEventListener('DOMContentLoaded', () => {
     wristInput = document.getElementById('wrist');
     ankleInput = document.getElementById('ankle');
 
-
     document.getElementById('addPhaseBtn').addEventListener('click', () => addStage());
 
     [heightInput, weightInput, bodyFatInput, wristInput, ankleInput].forEach(input => {
@@ -122,8 +121,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (stages.length === 0) {
         addStage();
+    } else {
+        selectStage(0);
     }
 });
+
 
 function initStartDatePicker() {
     flatpickr("#startDate", {
@@ -393,14 +395,14 @@ function updateStageSliderDisplay(field, value) {
     const stage = stages[currentStageIndex];
     stage[field] = value;
 
-    document.getElementById(`${field}Display`).textContent = value.toFixed(2);
+    document.getElementById(`${field}Display`).textContent = value.toFixed(1);
 
     const muscleChange = stage.muscleChange || 0;
     const fatChange = stage.fatChange || 0;
     const totalChange = muscleChange + fatChange;
     const calorieDelta = fatChange * 7700 + muscleChange * 2500;
 
-    document.getElementById('weeklyChangeDisplay').textContent = totalChange.toFixed(2);
+    document.getElementById('weeklyChangeDisplay').textContent = totalChange.toFixed(1);
     document.getElementById('weeklyCalorieDeltaDisplay').textContent = calorieDelta.toFixed(0);
 
     simulateBodyPlanner();
