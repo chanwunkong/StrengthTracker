@@ -9,7 +9,23 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- Flatpickr CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <style>
+    /* 新增：RM 計算器導覽按鈕樣式（簡單、不中斷既有風格） */
+    .nav-btn {
+      display: inline-block;
+      margin: 8px 0 16px;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 6px;
+      background: #1f2937;
+      color: #fff;
+      cursor: pointer;
+    }
 
+    .nav-btn:hover {
+      opacity: .9;
+    }
+  </style>
 </head>
 
 <body>
@@ -19,6 +35,10 @@
     <h1>Google 登入</h1>
     <button id="loginBtn">登入</button>
     <button id="logoutBtn" style="display:none;">登出</button>
+
+    <!-- 新增：導向 RM 計算器的按鈕 -->
+    <button class="nav-btn" onclick="location.href='rm-calculator.html'">前往 RM 計算器</button>
+
     <div id="userInfo" style="display:none;">
       <p id="welcomeMsg"></p>
 

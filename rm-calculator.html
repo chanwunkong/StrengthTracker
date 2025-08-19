@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RM 進度推薦器</title>
+    <style>
+        :root {
+            --bg: #f6f7f9;
+            --card: #fff;
+            --line: #e5e7eb;
+            --txt: #111827;
+            --muted: #6b7280;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial
+        }
+
+        .wrap {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 16px
+        }
+
+        .h1 {
+            font-size: 26px;
+            font-weight: 800;
+            margin: 0 0 6px
+        }
+
+        .p {
+            color: var(--muted);
+            margin: 0 0 20px
+        }
+
+        .grid {
+            display: grid;
+            gap: 16px
+        }
+
+        @media(min-width:1024px) {
+            .grid {
+                grid-template-columns: 1fr 1fr
+            }
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 18px
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            color: #374151;
+            margin: 8px 0 6px
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            font-size: 15px
+        }
+
+        .row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin: 8px 0;
+            flex-wrap: wrap
+        }
+
+        .btn {
+            padding: 5px 10px;
+            border-radius: 999px;
+            border: 1px solid var(--line);
+            background: #fff;
+            cursor: pointer
+        }
+
+        .btn.on {
+            background: #111827;
+            color: #fff
+        }
+
+        .stat {
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 12px
+        }
+
+        .stat .t {
+            font-size: 12px;
+            color: var(--muted)
+        }
+
+        .stat .v {
+            font-size: 22px;
+            font-weight: 700
+        }
+
+        .warn {
+            background: #FFFBEB;
+            color: #92400E;
+            border: 1px solid #FDE68A;
+            padding: 8px 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-size: 13px
+        }
+
+        .list {
+            font-size: 14px;
+            color: #374151
+        }
+
+        .list li {
+            margin: 4px 0
+        }
+
+        .info {
+            margin-top: 24px;
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 16px
+        }
+
+        .info h3 {
+            margin: 0 0 10px;
+            font-size: 18px
+        }
+
+        .info table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px
+        }
+
+        .info th,
+        .info td {
+            border: 1px solid #e5e7eb;
+            padding: 6px;
+            text-align: left
+        }
+
+        .info th {
+            background: #f3f4f6
+        }
+
+        .muted {
+            color: #6b7280
+        }
+
+        .badge {
+            font-size: 12px;
+            padding: 2px 6px;
+            border-radius: 999px;
+            border: 1px solid var(--line);
+            background: #fff
+        }
+
+        /* ⬇ 新增：結果表格樣式 */
+        .rm-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            margin-top: 8px
+        }
+
+        .rm-table th,
+        .rm-table td {
+            border: 1px solid #e5e7eb;
+            padding: 6px;
+            text-align: right
+        }
+
+        .rm-table th:first-child,
+        .rm-table td:first-child {
+            text-align: left
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+        <h1 class="h1">RM 進度推薦器（維持 <span id="hdrTarget">5</span> 次的重量）</h1>
+        <p class="p">對於深蹲，可選擇是否將「自重的一部分」納入計算：<span class="badge">只算槓鈴</span> 或 <span class="badge">槓鈴 + 自重比例</span>。</p>
+
+        <div class="grid">
+            <!-- 左邊：輸入 -->
+            <div class="card">
+                <h2 style="margin:0 0 12px;font-size:18px">輸入</h2>
+
+                <label>單位 Unit</label>
+                <div class="row">
+                    <button class="btn on" id="btnKg">KG</button>
+                    <button class="btn" id="btnLb">LB</button>
+                </div>
+
+                <label>計算負荷模式</label>
+                <div class="row">
+                    <button class="btn on" id="modeBarOnly">只算槓鈴</button>
+                    <button class="btn" id="modeIncludeBW">槓鈴 + 自重比例</button>
+                </div>
+
+                <div class="row">
+                    <div style="flex:1 1 180px;min-width:220px">
+                        <label>工作重量（槓鈴）</label>
+                        <input id="weight" placeholder="例如 100" />
+                    </div>
+                    <div style="flex:1 1 120px;min-width:160px">
+                        <label>本次完成次數</label>
+                        <input id="achieved" placeholder="例如 5" />
+                    </div>
+                    <div style="flex:1 1 120px;min-width:160px">
+                        <label>目標維持次數</label>
+                        <input id="target" value="5" />
+                    </div>
+                </div>
+
+                <label>1RM 公式</label>
+                <select id="formula">
+                    <option value="epley">Epley</option>
+                    <option value="brzycki">Brzycki</option>
+                    <option value="lombardi">Lombardi</option>
+                    <option value="oconner">O’Conner</option>
+                    <option value="wathan">Wathan</option>
+                </select>
+
+                <div id="bwBlock" style="display:none">
+                    <div class="row" style="margin-top:8px">
+                        <div style="flex:1 1 200px;min-width:200px">
+                            <label>自重 Bodyweight</label>
+                            <input id="bodyweight" placeholder="例如 70" />
+                        </div>
+                        <div style="flex:1 1 200px;min-width:220px">
+                            <label>自重納入比例（0–100%）</label>
+                            <input id="bwRatio" value="75" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <span class="muted" style="font-size:12px">快速選擇：</span>
+                        <button class="btn" data-ratio="70">70%</button>
+                        <button class="btn" data-ratio="75">75%</button>
+                        <button class="btn" data-ratio="80">80%</button>
+                        <span class="muted" style="font-size:12px">（高槓/低槓/前蹲可依感覺調整）</span>
+                    </div>
+                </div>
+
+                <label>器材刻度（最小增量）</label>
+                <input id="step" value="2.5" />
+
+                <label>最小增量策略（當增幅太小時至少加）</label>
+                <input id="minbump" value="2.5" />
+            </div>
+
+            <!-- 右邊：結果 -->
+            <div class="card">
+                <h2 style="margin:0 0 12px;font-size:18px">結果</h2>
+                <div id="warn" class="warn" style="display:none">提醒：次數 > 12 時，1RM 推估準確度下降。</div>
+
+                <div class="grid" style="grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+                    <div class="stat">
+                        <div class="t">推估 1RM（等效載重）</div>
+                        <div class="v" id="v1rm">-</div>
+                    </div>
+                    <div class="stat">
+                        <div class="t">建議槓鈴重量（回到目標次數）</div>
+                        <div class="v" id="vrecBar">-</div>
+                    </div>
+                </div>
+
+                <ul class="list">
+                    <li>數學建議（等效總負荷）: <span id="rawEff">-</span></li>
+                    <li>依刻度四捨五入（轉回等效）: <span id="roundedEff">-</span></li>
+                    <li>轉換為槓鈴重量: <span id="roundedBar">-</span></li>
+                    <li>最小增量策略: 至少加 <span id="min">2.5</span></li>
+                </ul>
+                <p id="negNote" class="muted" style="display:none;font-size:12px">※ 注意：包含自重比例時，若計算導致槓鈴重量低於 0，將以 0 處理。
+                </p>
+
+                <!-- ⬇ 新增：RM 對照表 -->
+                <div class="info" style="margin-top:16px">
+                    <h3 style="margin-top:0">RM 對照表（依目前設定與公式）</h3>
+                    <div class="row" style="margin:6px 0">
+                        <label style="margin:0">顯示到幾 RM：
+                            <input id="maxRM" value="12" inputmode="numeric"
+                                style="width:90px;display:inline-block;margin-left:8px">
+                        </label>
+                    </div>
+                    <table class="rm-table">
+                        <thead>
+                            <tr>
+                                <th>次數 (RM)</th>
+                                <th>等效總負荷</th>
+                                <th>槓鈴重量（四捨五入）</th>
+                                <th>%1RM</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rmTableBody">
+                            <tr>
+                                <td colspan="4" class="muted">請先輸入重量與次數</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- ↑ 新增結束 -->
+            </div>
+        </div>
+
+        <!-- 公式比較與適用範圍 -->
+        <div class="info">
+            <h3>公式比較與適用範圍</h3>
+            <table>
+                <tr>
+                    <th>公式</th>
+                    <th>特點</th>
+                    <th>適用範圍</th>
+                </tr>
+                <tr>
+                    <td>Epley</td>
+                    <td>最常用，計算簡單</td>
+                    <td>一般 1–10 次數範圍，訓練應用廣</td>
+                </tr>
+                <tr>
+                    <td>Brzycki</td>
+                    <td>對高次數較敏感</td>
+                    <td>建議 1–10 RM，>10 次準確度下降</td>
+                </tr>
+                <tr>
+                    <td>Lombardi</td>
+                    <td>用次數的指數修正</td>
+                    <td>中高次數（8–12 RM）較穩定</td>
+                </tr>
+                <tr>
+                    <td>O’Conner</td>
+                    <td>每次 +2.5% 的線性估算</td>
+                    <td>入門者或中等強度估算</td>
+                </tr>
+                <tr>
+                    <td>Wathan</td>
+                    <td>較複雜的回歸式</td>
+                    <td>研究/高準確度需求</td>
+                </tr>
+            </table>
+            <p class="muted" style="margin-top:10px;font-size:13px">
+                💡 一般訓練先用「只算槓鈴」；若想更貼近下肢承載，可切「槓鈴 + 自重比例」。比例常用 70–80%，視動作型態（高槓、低槓、前蹲）與深度/姿勢調整。
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // 單位轉換
+        const LB_TO_KG = 0.45359237, KG_TO_LB = 1 / LB_TO_KG;
+        let unit = 'kg';
+        let includeBW = false;
+
+        const qs = id => document.getElementById(id);
+        const toKg = v => unit === 'lb' ? v * LB_TO_KG : v;
+        const fromKg = v => unit === 'lb' ? v * KG_TO_LB : v;
+        const roundToStep = (v, s) => Math.round(v / s) * s;
+        const fmt = v => !isFinite(v) ? '-' : (unit === 'kg' ? Number(v).toFixed(1) : Math.round(Number(v)));
+        const clamp = (v, lo, hi) => Math.min(Math.max(v, lo), hi);
+
+        // 公式
+        const fwd = {
+            epley: (W, r) => W * (1 + r / 30),
+            brzycki: (W, r) => W / (1.0278 - 0.0278 * r),
+            lombardi: (W, r) => W * Math.pow(r, 0.1),
+            oconner: (W, r) => W * (1 + 0.025 * r),
+            wathan: (W, r) => (100 * W) / (48.8 + 53.8 * Math.exp(-0.075 * r)),
+        };
+        const inv = {
+            epley: (o, r) => o / (1 + r / 30),
+            brzycki: (o, r) => o * (1.0278 - 0.0278 * r),
+            lombardi: (o, r) => o / Math.pow(r, 0.1),
+            oconner: (o, r) => o / (1 + 0.025 * r),
+            wathan: (o, r) => (o * (48.8 + 53.8 * Math.exp(-0.075 * r))) / 100,
+        };
+
+        // 元素
+        const elW = qs('weight'), elR = qs('achieved'), elRt = qs('target'),
+            elF = qs('formula'), elS = qs('step'), elM = qs('minbump'),
+            v1 = qs('v1rm'), vrecBar = qs('vrecBar'),
+            vrawEff = qs('rawEff'), vroundedEff = qs('roundedEff'), vroundedBar = qs('roundedBar'),
+            vmin = qs('min'), warn = qs('warn'), hdr = qs('hdrTarget'),
+            btnKg = qs('btnKg'), btnLb = qs('btnLb'),
+            modeBarOnly = qs('modeBarOnly'), modeIncludeBW = qs('modeIncludeBW'),
+            bwBlock = qs('bwBlock'), elBW = qs('bodyweight'), elRatio = qs('bwRatio'),
+            negNote = qs('negNote'),
+            rmBody = qs('rmTableBody'), elMaxRM = qs('maxRM'); // ⬅ 新增
+
+        // 自重比例快速鍵
+        document.querySelectorAll('[data-ratio]').forEach(btn => {
+            btn.addEventListener('click', () => { elRatio.value = btn.getAttribute('data-ratio'); recalc(); });
+        });
+
+        function recalc() {
+            const Wbar = Number(elW.value);
+            const r = Math.floor(Number(elR.value));
+            const rt = Math.floor(Number(elRt.value));
+            const step = Number(elS.value) || 0;
+            const minBump = Number(elM.value) || 0;
+            const BW = Number(elBW?.value || 0);
+            const ratioPct = clamp(Number(elRatio?.value || 0), 0, 100);
+            const ratio = ratioPct / 100;
+
+            hdr.textContent = rt || 5;
+            vmin.textContent = isFinite(minBump) ? minBump : '-';
+            warn.style.display = r > 12 ? 'block' : 'none';
+
+            const needBW = includeBW;
+            const baseValid = (Wbar > 0 && r >= 1 && rt >= 1);
+            const bwValid = (!needBW) || (BW > 0 && ratio >= 0);
+
+            // 先清空表格
+            if (rmBody) rmBody.innerHTML = '<tr><td colspan="4" class="muted">請先輸入重量與次數</td></tr>';
+
+            if (!baseValid || !bwValid) {
+                [v1, vrecBar, vrawEff, vroundedEff, vroundedBar].forEach(el => el.textContent = '-');
+                negNote.style.display = 'none';
+                return;
+            }
+
+            // 等效總負荷
+            const WbarKg = toKg(Wbar);
+            const BWkg = toKg(BW);
+            const added = includeBW ? (BWkg * ratio) : 0;
+            const W_eff_kg = WbarKg + added;
+
+            const f = elF.value;
+            const oneRM_eff_kg = fwd[f](W_eff_kg, r);
+            const oneRM_eff = fromKg(oneRM_eff_kg);
+
+            const target_eff_kg = inv[f](oneRM_eff_kg, rt);
+            const target_eff = fromKg(target_eff_kg);
+
+            let target_bar = includeBW ? (target_eff - fromKg(BWkg * ratio)) : target_eff;
+            if (target_bar < 0) target_bar = 0;
+
+            const rounded_bar = roundToStep(target_bar, step);
+            const rounded_eff = includeBW ? (rounded_bar + fromKg(BWkg * ratio)) : rounded_bar;
+
+            const deltaRawBar = target_bar - Wbar;
+            const deltaRoundedBar = rounded_bar - Wbar;
+            const sensible_bar = (deltaRoundedBar <= 0 && deltaRawBar > 0 && deltaRawBar < minBump)
+                ? roundToStep(Wbar + minBump, step)
+                : rounded_bar;
+
+            v1.textContent = fmt(oneRM_eff);
+            vrecBar.textContent = fmt(sensible_bar);
+            vrawEff.textContent = fmt(target_eff);
+            vroundedEff.textContent = fmt(rounded_eff);
+            vroundedBar.textContent = fmt(rounded_bar);
+            negNote.style.display = includeBW && target_bar === 0 ? 'block' : 'none';
+
+            // ⬇ 生成 RM 對照表
+            const maxRM = Math.max(1, Math.min(20, Math.floor(Number(elMaxRM?.value || 12))));
+            let rows = '';
+            for (let rr = 1; rr <= maxRM; rr++) {
+                const effKg = inv[f](oneRM_eff_kg, rr);          // 該 RM 的等效總負荷 (kg)
+                const eff = fromKg(effKg);                       // 轉為當前單位顯示
+                let bar = includeBW ? (eff - fromKg(BWkg * ratio)) : eff;
+                if (bar < 0) bar = 0;
+                const barRounded = roundToStep(bar, step);
+                const pct = (effKg / oneRM_eff_kg) * 100;        // 該 RM 占 1RM 的百分比
+
+                rows += `<tr>
+          <td>${rr}RM</td>
+          <td>${fmt(eff)}</td>
+          <td>${fmt(barRounded)}</td>
+          <td>${pct.toFixed(0)}%</td>
+        </tr>`;
+            }
+            rmBody.innerHTML = rows;
+            // ↑ 生成結束
+        }
+
+        // 事件
+        [elW, elR, elRt, elF, elS, elM].forEach(el => el.addEventListener('input', recalc));
+        [elBW, elRatio, elMaxRM].forEach(el => el && el.addEventListener('input', recalc));
+
+        btnKg.onclick = () => {
+            if (unit === 'kg') return;
+            const convert = v => (Number(v) > 0 ? (Number(v) * LB_TO_KG) : v);
+            elW.value = Number.isFinite(+elW.value) ? (convert(elW.value)).toFixed(2).replace(/\.00$/, '') : elW.value;
+            if (elBW) elBW.value = Number.isFinite(+elBW.value) ? (convert(elBW.value)).toFixed(2).replace(/\.00$/, '') : elBW.value;
+            elS.value = Number.isFinite(+elS.value) ? (convert(elS.value)).toFixed(2).replace(/\.00$/, '') : elS.value;
+            elM.value = Number.isFinite(+elM.value) ? (convert(elM.value)).toFixed(2).replace(/\.00$/, '') : elM.value;
+            unit = 'kg'; btnKg.classList.add('on'); btnLb.classList.remove('on'); recalc();
+        };
+        btnLb.onclick = () => {
+            if (unit === 'lb') return;
+            const convert = v => (Number(v) > 0 ? Math.round(Number(v) * KG_TO_LB) : v);
+            elW.value = Number.isFinite(+elW.value) ? convert(elW.value) : elW.value;
+            if (elBW) elBW.value = Number.isFinite(+elBW.value) ? convert(elBW.value) : elBW.value;
+            elS.value = Number.isFinite(+elS.value) ? convert(elS.value) : elS.value;
+            elM.value = Number.isFinite(+elM.value) ? convert(elM.value) : elM.value;
+            unit = 'lb'; btnLb.classList.add('on'); btnKg.classList.remove('on'); recalc();
+        };
+
+        // 模式切換
+        modeBarOnly.onclick = () => {
+            includeBW = false;
+            modeBarOnly.classList.add('on'); modeIncludeBW.classList.remove('on');
+            bwBlock.style.display = 'none';
+            recalc();
+        };
+        modeIncludeBW.onclick = () => {
+            includeBW = true;
+            modeIncludeBW.classList.add('on'); modeBarOnly.classList.remove('on');
+            bwBlock.style.display = 'block';
+            recalc();
+        };
+
+        // 初始
+        recalc();
+    </script>
+</body>
+
+</html>
