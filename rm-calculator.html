@@ -169,7 +169,7 @@
             background: #fff
         }
 
-        /* ⬇ 新增：結果表格樣式 */
+        /* 表格樣式 */
         .rm-table {
             width: 100%;
             border-collapse: collapse;
@@ -289,11 +289,11 @@
                 <p id="negNote" class="muted" style="display:none;font-size:12px">※ 注意：包含自重比例時，若計算導致槓鈴重量低於 0，將以 0 處理。
                 </p>
 
-                <!-- ⬇ 新增：RM 對照表 -->
+                <!-- 同重量不同次數 → 只顯示「預估 1RM」 -->
                 <div class="info" style="margin-top:16px">
-                    <h3 style="margin-top:0">RM 對照表（依目前設定與公式）</h3>
+                    <h3 style="margin-top:0">同重量不同次數 → 預估 1RM</h3>
                     <div class="row" style="margin:6px 0">
-                        <label style="margin:0">顯示到幾 RM：
+                        <label style="margin:0">顯示到幾次：
                             <input id="maxRM" value="12" inputmode="numeric"
                                 style="width:90px;display:inline-block;margin-left:8px">
                         </label>
@@ -301,20 +301,17 @@
                     <table class="rm-table">
                         <thead>
                             <tr>
-                                <th>次數 (RM)</th>
-                                <th>等效總負荷</th>
-                                <th>槓鈴重量（四捨五入）</th>
-                                <th>%1RM</th>
+                                <th>次數</th>
+                                <th>預估 1RM</th>
                             </tr>
                         </thead>
                         <tbody id="rmTableBody">
                             <tr>
-                                <td colspan="4" class="muted">請先輸入重量與次數</td>
+                                <td colspan="2" class="muted">請先輸入重量</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
-                <!-- ↑ 新增結束 -->
             </div>
         </div>
 
@@ -354,7 +351,7 @@
                 </tr>
             </table>
             <p class="muted" style="margin-top:10px;font-size:13px">
-                💡 一般訓練先用「只算槓鈴」；若想更貼近下肢承載，可切「槓鈴 + 自重比例」。比例常用 70–80%，視動作型態（高槓、低槓、前蹲）與深度/姿勢調整。
+                💡 一般訓練先用「只算槓鈴」；若想更貼近下肢承載，可切「槓鈴 + 自重比例」。比例常用 70–80%，視動作型態與深度調整。
             </p>
         </div>
     </div>
@@ -398,12 +395,33 @@
             modeBarOnly = qs('modeBarOnly'), modeIncludeBW = qs('modeIncludeBW'),
             bwBlock = qs('bwBlock'), elBW = qs('bodyweight'), elRatio = qs('bwRatio'),
             negNote = qs('negNote'),
-            rmBody = qs('rmTableBody'), elMaxRM = qs('maxRM'); // ⬅ 新增
+            rmBody = qs('rmTableBody'), elMaxRM = qs('maxRM');
 
-        // 自重比例快速鍵
+        // 快速選比例
         document.querySelectorAll('[data-ratio]').forEach(btn => {
             btn.addEventListener('click', () => { elRatio.value = btn.getAttribute('data-ratio'); recalc(); });
         });
+
+        // 只輸出「預估 1RM」的表格
+        function build1RMTableOnly(Wbar, BW, ratio, f) {
+            if (!rmBody) return;
+            const WbarKg = toKg(Wbar);
+            const BWkg = toKg(BW);
+            const added = includeBW ? (BWkg * ratio) : 0;  // 是否把自重比例納入「等效負荷」
+            const W_eff_kg = WbarKg + added;
+
+            const maxReps = Math.max(1, Math.min(30, Math.floor(Number(elMaxRM?.value || 12))));
+            let rows = '';
+            for (let rr = 1; rr <= maxReps; rr++) {
+                const oneRM_eff_kg = fwd[f](W_eff_kg, rr);   // 同重量做 rr 次 → 預估 1RM（以當前模式的等效負荷計）
+                const oneRM_eff = fromKg(oneRM_eff_kg);   // 轉為顯示單位
+                rows += `<tr${rr === Math.floor(Number(elR.value)) ? ' style="background:#fafafa"' : ''}>
+          <td>${rr}</td>
+          <td>${fmt(oneRM_eff)}</td>
+        </tr>`;
+            }
+            rmBody.innerHTML = rows;
+        }
 
         function recalc() {
             const Wbar = Number(elW.value);
@@ -419,20 +437,23 @@
             vmin.textContent = isFinite(minBump) ? minBump : '-';
             warn.style.display = r > 12 ? 'block' : 'none';
 
+            // 清空表格提示
+            if (rmBody) rmBody.innerHTML = '<tr><td colspan="2" class="muted">請先輸入重量</td></tr>';
+
             const needBW = includeBW;
             const baseValid = (Wbar > 0 && r >= 1 && rt >= 1);
             const bwValid = (!needBW) || (BW > 0 && ratio >= 0);
+            const justWeightValid = (Wbar > 0) && bwValid;
 
-            // 先清空表格
-            if (rmBody) rmBody.innerHTML = '<tr><td colspan="4" class="muted">請先輸入重量與次數</td></tr>';
-
+            // 若主結果輸入不足，也先提供 1RM 預估表（僅需重量）
             if (!baseValid || !bwValid) {
                 [v1, vrecBar, vrawEff, vroundedEff, vroundedBar].forEach(el => el.textContent = '-');
                 negNote.style.display = 'none';
+                if (justWeightValid) build1RMTableOnly(Wbar, BW, ratio, elF.value);
                 return;
             }
 
-            // 等效總負荷
+            // 主結果計算（等效 → 反推 → 轉槓鈴）
             const WbarKg = toKg(Wbar);
             const BWkg = toKg(BW);
             const added = includeBW ? (BWkg * ratio) : 0;
@@ -464,26 +485,8 @@
             vroundedBar.textContent = fmt(rounded_bar);
             negNote.style.display = includeBW && target_bar === 0 ? 'block' : 'none';
 
-            // ⬇ 生成 RM 對照表
-            const maxRM = Math.max(1, Math.min(20, Math.floor(Number(elMaxRM?.value || 12))));
-            let rows = '';
-            for (let rr = 1; rr <= maxRM; rr++) {
-                const effKg = inv[f](oneRM_eff_kg, rr);          // 該 RM 的等效總負荷 (kg)
-                const eff = fromKg(effKg);                       // 轉為當前單位顯示
-                let bar = includeBW ? (eff - fromKg(BWkg * ratio)) : eff;
-                if (bar < 0) bar = 0;
-                const barRounded = roundToStep(bar, step);
-                const pct = (effKg / oneRM_eff_kg) * 100;        // 該 RM 占 1RM 的百分比
-
-                rows += `<tr>
-          <td>${rr}RM</td>
-          <td>${fmt(eff)}</td>
-          <td>${fmt(barRounded)}</td>
-          <td>${pct.toFixed(0)}%</td>
-        </tr>`;
-            }
-            rmBody.innerHTML = rows;
-            // ↑ 生成結束
+            // 只生成「預估 1RM」表
+            build1RMTableOnly(Wbar, BW, ratio, f);
         }
 
         // 事件
