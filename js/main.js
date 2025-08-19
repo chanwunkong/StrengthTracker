@@ -122,7 +122,7 @@ function updateUserInfo(data) {
 
 
     const records = data.records || {};
-    const dateList = Object.keys(records).sort(); 
+    const dateList = Object.keys(records).sort();
     const latestDate = dateList[dateList.length - 1];
 
     if (latestDate) {
@@ -153,26 +153,24 @@ function updateUserInfo(data) {
         });
     }
 
-window.bodyPlannerChartReadyCallback = () => {
-    if (window.loadHistoricalRecords) {
-        const startDate = data.startDate || new Date().toISOString().split('T')[0];
-        window.loadHistoricalRecords(startDate, records);
-    }
-};
+    window.bodyPlannerChartReadyCallback = () => {
+        if (window.loadHistoricalRecords) {
+            const startDate = data.startDate || new Date().toISOString().split('T')[0];
+            window.loadHistoricalRecords(startDate, records);
+        }
+    };
 }
 
 window.saveUserData = async function () {
     const user = auth.currentUser;
-    if (!user) {
-        alert('請先登入！');
-        return;
-    }
+    if (!user) { alert('請先登入！'); return; }
 
-    if (!recordDate) {
-        alert('請選擇紀錄日期');
-        return;
-    }
+    // 1) 取得 input 元素與值（而不是用元素本身）
+    const recordDateEl = document.getElementById('recordDate');
+    const dateKey = (recordDateEl?.value || '').trim();
+    if (!dateKey) { alert('請選擇紀錄日期'); return; }
 
+    // 2) 其他欄位
     const gender = document.getElementById('gender').value;
     const height = parseFloat(document.getElementById('height').value);
     const weight = parseFloat(document.getElementById('weight').value);
@@ -182,37 +180,23 @@ window.saveUserData = async function () {
 
     const userDocRef = doc(db, 'users', user.uid);
 
-    const userData = {
-        gender,
-        height,
-        wrist,
-        ankle,
-        records: {
-            [recordDate]: {
-                weight,
-                bodyFat
-            }
-        }
-    };
-
     try {
         const existingDoc = await getDoc(userDocRef);
         if (existingDoc.exists()) {
-
             const oldData = existingDoc.data();
-            const updatedRecords = { ...(oldData.records || {}), ...userData.records };
+            const updatedRecords = { ...(oldData.records || {}) };
+            updatedRecords[dateKey] = { weight, bodyFat };
 
             await setDoc(userDocRef, {
                 ...oldData,
-                gender,
-                height,
-                wrist,
-                ankle,
+                gender, height, wrist, ankle,
                 records: updatedRecords
             });
-
         } else {
-            await setDoc(userDocRef, userData);
+            await setDoc(userDocRef, {
+                gender, height, wrist, ankle,
+                records: { [dateKey]: { weight, bodyFat } }
+            });
         }
 
         alert('資料已成功儲存！');
@@ -221,6 +205,7 @@ window.saveUserData = async function () {
         alert('資料儲存失敗，請稍後再試。');
     }
 }
+
 
 window.deleteUserRecord = async function () {
     const user = auth.currentUser;
@@ -286,8 +271,8 @@ window.selectRadioButton = function (button) {
     buttons.forEach(btn => btn.classList.remove('active'));
     button.classList.add('active');
 
-    const dataName = button.getAttribute('data-name'); 
-    const dataValue = button.getAttribute('data-value'); 
+    const dataName = button.getAttribute('data-name');
+    const dataValue = button.getAttribute('data-value');
 
     document.getElementById(dataName).value = dataValue;
 
@@ -322,8 +307,8 @@ recordDateInput.addEventListener('change', async () => {
                 return;
             }
 
-            const dates = Object.keys(records).sort(); 
-            const earlierDates = dates.filter(d => d < recordDate); 
+            const dates = Object.keys(records).sort();
+            const earlierDates = dates.filter(d => d < recordDate);
 
             if (earlierDates.length > 0) {
                 const latestPriorDate = earlierDates[earlierDates.length - 1];
