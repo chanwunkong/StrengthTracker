@@ -312,6 +312,29 @@
                         </tbody>
                     </table>
                 </div>
+                <!-- 不同 RM 的預估重量 -->
+                <div class="info" style="margin-top:16px">
+                    <h3 style="margin-top:0">依推估 1RM 反推 → 不同 RM 的建議最小重量</h3>
+                    <div class="row" style="margin:6px 0">
+                        <label style="margin:0">顯示到幾次：
+                            <input id="maxPredRM" value="12" inputmode="numeric"
+                                style="width:90px;display:inline-block;margin-left:8px">
+                        </label>
+                    </div>
+                    <table class="rm-table">
+                        <thead>
+                            <tr>
+                                <th>次數</th>
+                                <th>預估重量</th>
+                            </tr>
+                        </thead>
+                        <tbody id="predTableBody">
+                            <tr>
+                                <td colspan="2" class="muted">請先輸入重量</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -396,6 +419,7 @@
             bwBlock = qs('bwBlock'), elBW = qs('bodyweight'), elRatio = qs('bwRatio'),
             negNote = qs('negNote'),
             rmBody = qs('rmTableBody'), elMaxRM = qs('maxRM');
+        predTableBody = qs('predTableBody'), elMaxPredRM = qs('maxPredRM');
 
         // 快速選比例
         document.querySelectorAll('[data-ratio]').forEach(btn => {
@@ -421,6 +445,24 @@
         </tr>`;
             }
             rmBody.innerHTML = rows;
+        }
+
+        // 不同 RM 的預估重量
+        function buildPredWeightTable(oneRM_eff_kg, f) {
+            if (!predTableBody) return;
+            const maxReps = Math.max(1, Math.min(30, Math.floor(Number(elMaxPredRM?.value || 12))));
+            let rows = '';
+            for (let rr = 1; rr <= maxReps; rr++) {
+                const predEff_kg = inv[f](oneRM_eff_kg, rr);   // 不同 RM 的等效重量
+                let predBar = includeBW ? (predEff_kg - toKg(Number(elBW?.value || 0)) * (Number(elRatio?.value || 0) / 100)) : predEff_kg;
+                if (predBar < 0) predBar = 0;
+                const predBarDisp = fromKg(predBar);
+                rows += `<tr>
+          <td>${rr}</td>
+          <td>${fmt(predBarDisp)}</td>
+        </tr>`;
+            }
+            predTableBody.innerHTML = rows;
         }
 
         function recalc() {
@@ -487,11 +529,15 @@
 
             // 只生成「預估 1RM」表
             build1RMTableOnly(Wbar, BW, ratio, f);
+
+            // 生成「不同 RM 的預估重量」表
+            buildPredWeightTable(oneRM_eff_kg, f);
         }
 
         // 事件
         [elW, elR, elRt, elF, elS, elM].forEach(el => el.addEventListener('input', recalc));
-        [elBW, elRatio, elMaxRM].forEach(el => el && el.addEventListener('input', recalc));
+        [elBW, elRatio, elMaxRM, elMaxPredRM].forEach(el => el && el.addEventListener('input', recalc));
+
 
         btnKg.onclick = () => {
             if (unit === 'kg') return;
